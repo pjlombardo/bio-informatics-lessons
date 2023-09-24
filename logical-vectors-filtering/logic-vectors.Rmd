@@ -8,21 +8,164 @@ runtime: shiny_prerendered
 library(learnr)
 library(dplyr)
 library(ggplot2)
+library(knitr)
+library(kableExtra)
 knitr::opts_chunk$set(echo = FALSE)
+
+quiz_numbers<-c(1, 12, 4, 3, 15)
+logic1<-quiz_numbers < 10
+df_numbers<-data.frame(Question = sprintf("True or False: the number  ***%s***  is less than 10.",quiz_numbers),
+                       AnswerKey = quiz_numbers<10)
+set.seed(123)
+quiz_numbers2n<-sample(1:30,6)
+# logic2<-quiz_numbers < 10
+df_numbers2<-data.frame(Question = sprintf("True or False: the number  ***%s***  is greater than 15.",quiz_numbers2n))
+set.seed(321)
+students<-data.frame(height = round(rnorm(150, 68, 5),1),
+                    IQ = round(rnorm(150, 100,8),0))
 ```
 
-## Basics of logical (boolean) vectors
+## The basics of logical vectors
+I like to think of logical vectors (sometimes called *boolean* vectors) as the answer key to a TRUE/FALSE quiz. The vector `logic1` below is an example; notice it just contains a collection of five values, which can either be `TRUE` or `FALSE`: 
+```{r echo =T}
+logic1
+```
+In our case, we can think of `logic1` as the answer key to the following quiz:
 
-## Logical vectors from comparisons
+```{r fig.align='center'}
+kbl(df_numbers) %>% kable_styling()
+```
 
-### Numerical comparisons
-Examples
+Wait, can't we get a computer to do that?  Of course!
 
-Examples with a data frame
+In the code below, we first create a vector of numbers (`quiz_numbers`) that we wish to test against the value of **10**.  Next, we compare `quiz_numbers` to the value of 10 using a `<` symbol. 
 
-Application of counting and finding percentages
+Try it out! Is `R` an A-student?
+```{r quiz-compare-10, exercise = TRUE}
+quiz_numbers<-c(1, 12, 4, 3, 15)
 
-### Text comparisons
+# now let's compare
+quiz_numbers < 10
+```
+
+#### Exercise:
+Consider the following True/False quiz.
+```{r}
+kbl(df_numbers2) %>% kable_styling()
+```
+As we did above, use `R` to get create the answer key in a logical vector. (*Hint:* you will need to create your own `quiz_numbers2` vector of values to compare against 15. We got you started)
+```{r quiz-compare-15, exercise = TRUE}
+# Write your comparision
+quiz_numbers2 <- c( ... )
+```
+
+```{r quiz-compare-15-hint-1}
+quiz_numbers2<- c(15, 19, 14, 3, 10, 18)
+# Now write the comparison
+```
+
+```{r quiz-compare-15-hint-2}
+quiz_numbers2<- c(15, 19, 14, 3, 10, 18)
+# Now write the comparison
+quiz_numbers2 > ...
+```
+
+```{r quiz-compare-15-solution}
+quiz_numbers2<- c(15, 19, 14, 3, 10, 18)
+# Now write the comparison
+quiz_numbers2 > 15
+```
+
+
+
+
+## Other ways to compare numbers!
+There are many ways to compare numbers in `R`, but these are the most common:
+```{r}
+kbl(
+    data.frame(Symbol = c("<","<=",">",">=","==","!="),
+               Meaning = c("strictly less than", "less than or equal", "strictly greater than", "greater than or equal", "equal to", "not equal to"))
+) %>% kable_styling()
+```
+
+For fun, we wrote some comparisons below. Make sure the outputs make sense to you!
+
+(You can run the lines below one at a time by highlighting a given line, and then hitting "Run Code.")
+```{r comparisons, exercise=TRUE}
+10 == 12
+12 == 12
+
+c(1, 2, 3, 4) <= 3
+c(1, 2, 3, 4) < 3
+
+10 !=12
+12 !=12
+```
+
+### An application of numerical comparisons
+Suppose we have a data frame with observations on 150 students; specifically we track their heights and IQs and record it in `students`.  We want to know what percentage of our sample is taller than 72 inches, the unit used in my data frame. How can logical vectors help with this task?
+
+In `R`, logical values are also stored as numbers. Specifically, `TRUE` is treated as 1, and `FALSE` is treated as 0. To get our percentage, let's start by figuring out which students are taller than 72 inches.  Since there are 150 students, we will not want to do this by hand.  Instead, let's use a numerical comparison to generate a logical vector. Use the Code chunk below to 
+
+1. get the `height` variable from the `students` data frame, and
+2. compare that variable against 72 with the appropriate comparison symbol.
+
+```{r student-height, exercise = TRUE}
+# Place your code here
+```
+
+```{r student-height-hint-1}
+students$height ...
+```
+
+```{r student-height-hint-2}
+students$height > ...
+```
+
+```{r student-height-solution}
+students$height > 72
+```
+
+How many of these are `TRUE`? Since each `TRUE` corresponds to a 1, and all the `FALSE` values correspond to zero, if we use the `sum()` command on this logical vector, it will naturally count all the `TRUE` responses!
+
+```{r student-height-sum, exercise = TRUE}
+sum( ...place logical here...)
+```
+
+
+```{r student-height-sum-solution}
+sum(students$height > 72)
+```
+
+To convert this to a percentage, we simply divide by our sample size of 150. Write your final code to get the percentage of students above 72 inches in height.
+```{r student-height-perc, exercise = TRUE}
+# Place your code here.
+```
+
+```{r student-height-perc-solution}
+sum(students$height > 72)/150
+```
+
+#### Quick practice:
+What percentage of the students in the `students` data frame have an IQ less than or equal to 115?
+```{r student-IQ1, exercise = TRUE}
+# Place your code here.
+```
+
+```{r student-IQ1-solution}
+sum(students$IQ <= 115)/150
+```
+
+What percentage of the students in the `students` data frame have an IQ exactly equal to 100? (Remember you need a "double equals" to compare equality!)
+```{r student-IQ2, exercise = TRUE}
+# Place your code here.
+```
+
+```{r student-IQ2-solution}
+sum(students$IQ == 115)/150
+```
+
+## Logical vectors from text comparisons
 
 operators: `%in%` and basic `grepl()`
 
