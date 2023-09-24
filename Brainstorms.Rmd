@@ -1,0 +1,51 @@
+---
+title: "Brainstorms for leanr lessons"
+author: "by P. Lombardo"
+output:
+  html_document: default
+---
+```{r}
+library(tidyverse)
+```
+
+
+## logical-vectors lesson
+`%in%` and `grepl()` stuff
+```{r}
+small_iris<-iris %>% slice(c(1:2, 51, 52, 101:102)) %>%
+    select(Species, Petal.Width)
+
+small_iris$Species =="setosa"
+
+small_iris$Species %in% c("versicolor","virginica")
+
+grepl("v",small_iris$Species)
+grepl("s",small_iris$Species)
+grepl("i",small_iris$Species)
+
+
+```
+
+Tweet source:
+
+[https://github.com/madhuchaliyan/nlp](https://github.com/madhuchaliyan/nlp)
+redirected back to kaggle.
+
+in cli, used 
+```
+head -1000 twcs.csv >> new.csv
+```
+
+```{r}
+tweet_df<-read.csv('logical-vectors/data/twcs_small.csv',header=T)
+```
+
+```{r}
+tweet_df %>% names()
+dim(tweet_df)
+grepl("friend",tweet_df$text) %>% sum()
+grepl("@",tweet_df$text) %>% sum()
+grepl("name",tweet_df$text) %>% sum()
+grepl("(McDonald's|Chipotle)",tweet_df$text) %>% sum()
+```
+

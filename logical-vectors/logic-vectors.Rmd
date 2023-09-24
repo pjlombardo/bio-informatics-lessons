@@ -79,6 +79,8 @@ quiz_numbers2 > 15
 
 
 
+
+
 ## Other ways to compare numbers!
 There are many ways to compare numbers in `R`, but these are the most common:
 ```{r}
@@ -165,9 +167,12 @@ What percentage of the students in the `students` data frame have an IQ exactly 
 sum(students$IQ == 115)/150
 ```
 
+
+
 ## Logical vectors from text comparisons
 
 operators: `%in%` and basic `grepl()`
+
 
 Examples
 
