@@ -1,0 +1,186 @@
+---
+title: "Bio-informatics, applying logical vectors"
+author: "by P. Lombardo"
+output:
+  html_document: default
+---
+
+```{r, warning=FALSE,message=FALSE}
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+
+testdf<-read.csv('exampleData.csv',header=T)
+```
+
+## Setting up
+Setting up a small test dataframe to make sure the approaches are working properly.
+```{r}
+df1<-data.frame(
+    col1 = c(rep("A",5),
+             rep("C",5),
+             rep("G",5),
+             rep("T",5),
+             rep("",5)),
+    # strings-searched (col2) designed to give a repeating pattern
+    # True True False True False
+    # except the last column which should all come back FALSE
+    col2 = c(
+        "AT","TA","TC","A","T", # search criteria A
+        "CT","GC","AG","C","T", # search criteria C
+        "GT","CG","AT","G","T", # search criteria G
+        "AT","TA","CG","T","C",  # search criteria T
+        "AT","TA","CG","T","C"  # search criteria ""
+    )
+)
+```
+
+Here I use `strsplit` inside a custom function just to see if this approach is faster than using `grepl`.  I also use an if-else statement to handle treating empty string search patterns differently from the other cases.
+```{r}
+# custom function for checking row-wise
+custom_fxn<-function(x,y){
+    if (x==""){
+        return(FALSE)
+    } else {
+        # strsplit() returns a list (one list item for each line)
+        x %in% strsplit(y,split="")[[1]]
+    }
+}
+```
+
+Explore that the outputs on `df1` using the approaches:
+
+* **mapply() with grepl()**
+```{r}
+matrix(mapply(grepl, df1$col1, df1$col2),nrow=5,byrow = T)
+```
+Notice the `grepl` final row, where `""` is the search pattern, comes back all true when it should come back all False.  We can still use this if we filter a second time.
+
+* **custom_fxn() and mapply()**
+```{r}
+matrix(mapply(custom_fxn,df1$col1, df1$col2),nrow=5,byrow = T)
+```
+Notice this returns all the correct boolean values.
+
+### Testing with `exampleData.csv`
+
+As a second test, let's apply this to the `exampleData.csv` provided.
+
+**mapply() and grepl(), two step filter**
+```{r}
+filter_logical1<-mapply(grepl, 
+       testdf$associated_variant_risk_allele, 
+       testdf$genotype)
+```
+
+This should give us the correct dataframe, where the associated risk allele matches is not missing, and matches one of the genotype letters.
+```{r}
+testdf %>%
+    filter(filter_logical1) %>%# keeps matches and empty strings
+    filter(associated_variant_risk_allele!="") %>% #removes empty strings
+    select(genotype,associated_variant_risk_allele)
+```
+
+This should give us all *some* wrong rows, specifically where the associated risk allele doesn't match. The rows where there is an empty string in associated risk allele are removed. I only display the first 10 to visually check.
+```{r}
+testdf %>%
+    filter(!filter_logical1) %>% # removes matches and empty strings
+    select(genotype,associated_variant_risk_allele) %>% head(10)
+```
+
+
+**custom_fxn() and mapply()**:
+```{r}
+filter_logical2<-mapply(custom_fxn, 
+       testdf$associated_variant_risk_allele, 
+       testdf$genotype) 
+```
+
+This should give us the correct dataframe, where the associated risk allele matches is not missing, and matches one of the genotype letters.
+```{r}
+testdf %>% filter(filter_logical2) %>%
+    select(genotype, associated_variant_risk_allele)
+```
+
+This should give us all the wrong rows, where the associated risk allele either doesn't match or is missing. I only display the first 10 to visually check.
+```{r}
+testdf %>% filter(!filter_logical2) %>%
+    select(genotype, associated_variant_risk_allele) %>%
+    head(10)
+```
+
+
+## Time differences of mapply() versus a loop.
+**Summary:** `grepl()` with `mapply()` is considerably faster than the a for-loop, 
+but the fastest options uses the custom function with `mapply()`.
+
+Setting up a larger data frame for testing and timing. For `col1`, I also add in some empty strings to simulate the data provided in `exampleData.csv`.
+```{r,cache=T}
+set.seed(123)
+als<-c("A","C","G","T")
+df2<-data.frame(
+    # added some empty strings to create the empty strings in
+    # associated risk alleles.
+    col1=sample(c(als,"",""), 500000,replace=T),
+    col2=mapply(FUN=function(x,y){paste(x,y,sep="")},
+                sample(als, 500000,replace=T),
+                sample(als, 500000,replace=T))
+)
+df2 %>% head()
+```
+
+### Timing code
+I keep track of two time stamps:
+
+1. how long it takes to complete the first logical vector (loop or mapply step)
+2. how long it takes to create the data frame, given the initial logical vector.
+
+The purpose here is just to figure out if creating the logical vector is the most time intensive, and if there is any appreciable difference of time in having to filter twice when we use the loop or the grepl approach.
+
+```{r, cache =T}
+st1<-Sys.time()
+logic1<-mapply(grepl, df2$col1, df2$col2)
+stp1a<-Sys.time()
+res1<-df2 %>%
+    filter(logic1) %>%
+    filter(col1!="") 
+stp1b<-Sys.time()
+
+st2<-Sys.time()
+logic2<-logical(500000)
+for (i in 1:500000){
+    logic2[i]<-grepl(df2[i,1],df2[i,2])
+}
+stp2a<-Sys.time()
+res2<-df2 %>%
+    filter(logic2) %>%
+    filter(col1!="")
+stp2b<-Sys.time()
+
+st3<-Sys.time()
+logic3<-mapply(custom_fxn, df2$col1, df2$col2)
+stp3a<-Sys.time()
+res3<-df2 %>% filter(logic3)
+stp3b<-Sys.time()
+```
+
+## Results
+```{r}
+t1<-data.frame(
+    Approach=c("mapply() and grepl()",
+            "grepl() and for-loop",
+            "mapply() and custom_fxn()"),
+    Logic.Vector.Times= round(c(stp1a-st1,stp2a-st2,stp3a-st3),3),
+    Create.DF.Run.Times = round(c(stp1b-stp1a,stp2b-stp2a,stp3b-stp3a),3),
+    Total.Run.Times = round(c(stp1b-st1,stp2b-st2,stp3b-st3),3)
+)
+
+kable_styling(
+    kbl(t1,
+        col.names=c("Method","Logic Vector Run Times","Make Data Frame Run Times", "Total Run Time"),
+        caption="Comparing Running Times for Three Approaches"
+        )
+)
+```
+
+Clearly creating the logical vector is the most time intensive, and there doesn't seem to be much of a loss if you filter twice.
