@@ -1,7 +1,10 @@
 ---
 title: "Logical Vectors and `filter()`"
-output: learnr::tutorial
+output: 
+    learnr::tutorial:
+        theme: "sandstone" 
 runtime: shiny_prerendered
+bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -23,6 +26,12 @@ df_numbers2<-data.frame(Question = sprintf("True or False: the number  ***%s*** 
 set.seed(321)
 students<-data.frame(height = round(rnorm(150, 68, 5),1),
                     IQ = round(rnorm(150, 100,8),0))
+
+small_iris<-iris %>% select(Species,Sepal.Length) %>%
+    slice(1:3, 51:53, 101:103)
+tweets<-read.csv('data/twcs_small.csv',header = T)
+tweets<- tweets %>% 
+    select(author_id, inbound, text)
 ```
 
 ## The basics of logical vectors
@@ -169,7 +178,72 @@ sum(students$IQ == 115)/150
 
 
 
-## Logical vectors from text comparisons
+## Text comparisons
+We are also able to compare ***text*** in `R`.^[Text may also be referred to as "strings" or "characters". In `R`, these are often stored as **factors**, which are basically just character vectors with some added metadata.] However, text comparisons involve (mostly) different operators. In this section, we will discuss just a few of them: `==` and `!=`, the `%in%` operator, and the `grepl()` function.
+
+We will do some initial explorations using a small version of the `iris` data set, which records flower measurements for three different species of iris. We call it `small_iris`. To make our output manageable, we have taken a subset of the original `iris` data frame that only includes three of each kind of flower, and we list the species and sepal length variables. When we are more comfortable, we will explore a larger data set. For now,
+
+```{r echo = TRUE}
+small_iris
+```
+Notice that the first three rows are `setosa`, the next three are `versicolor`, and the last three are `virginica`.
+
+
+### Will the real `setosa` please stand up?
+Suppose I want to find out how many of the flowers in `small_iris` are setosa irises. Sure, I could just view `small_iris` and count, but this doesn't scale very well. What if my data frame had 10,000 flowers?
+
+As we saw in the last section, and easy way to count something is to `sum()` up a logical vector, where the entries we care about are labeled as `TRUE`. Since the `Species` variable is text, we can create such a logical vector by checking for *equality* with the desired "setosa" label.
+
+Run the code below to see the logical vector. Then, use the `sum()` function to count the number of setosa irises in `small_iris`. Finally, write your own code to count the number of "virginica" irises.
+```{r small-iris-ex1, exercise=TRUE,exercise.lines=4}
+small_iris$Species == "setosa"
+```
+```{r small-iris-ex1-hint-1}
+small_iris$Species == "setosa"
+sum(small_iris$Species == "setosa")
+```
+```{r small-iris-ex1-hint-2}
+small_iris$Species == "setosa"
+sum(small_iris$Species == "setosa")
+sum(small_iris$Species == "virginica")
+```
+
+The not equal comparison, `!=`, works on text as well.  Using a similar coding approach as the previous exercise, count how many flowers in `small_iris` are ***not equal*** to `setosa`.
+```{r small-iris-ex2, exercise=TRUE,exercise.lines=4}
+# Place your code here
+```
+```{r small-iris-ex2-hint-1}
+#Complete the code below by putting something in the quotes!
+small_iris$Species != "..."
+# then sum this logical vector
+```
+```{r small-iris-ex2-solution}
+sum(small_iris$Species!="setosa")
+```
+**Important Note:** If you get a count of zero and that is unexpected, ***check your spelling!***
+
+### Checking a list with `%in%`
+The `%in%` operator in `R` will check if text is in a provided list.  For example, can you explain what the code below does?
+```{r echo = T}
+small_iris$Species %in% c("virginica","versicolor")
+```
+Why are the first three entries `FALSE`? *In your own words*, explain what the code does!
+```{r question-untidy-1}
+question("Ready to see an explanation?",
+answer("Yes.", correct = TRUE),
+post_message = "The vector `small_iris$Species` contains text recording the species of each flower.  The `%in%` operator checks whether a given value from this vector is  ***in***  the list provided: `c(\"virginica\",\"versicolor\")`.  <br></br> Since the list provided contains only `virginica` and `versicolor` as options, the first three entries are False because they correspond to `setosa` flowers.  The last six entries are True because these are either `virginica` or `versicolor`."
+)
+```
+
+#### Exercises with `tweets`
+The `tweets` data frame contains several tweets pulled from a Kaggle data set (@tweet_data)^[We used the command line to just pull the first thousand tweets from this much larger data set.]
+```{r}
+kbl(tweets %>% head()) %>% kable_styling()
+
+```
+
+
+
 
 operators: `%in%` and basic `grepl()`
 
@@ -180,14 +254,18 @@ Examples with a data frame
 
 Application of counting and finding percentages for categories
 
-## Using logical vectors to `filter()`
-
-## Application
+## Using `grepl()`
 
 ## Review exercises with new example
 
+## Conclusions
+Notes, comments, summaries.
+
+Links to related exercises and resources.
 
 
+## References
+<div id="refs"></div>
 
 
 ***

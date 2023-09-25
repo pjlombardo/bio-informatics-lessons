@@ -22,8 +22,6 @@ small_iris$Species %in% c("versicolor","virginica")
 grepl("v",small_iris$Species)
 grepl("s",small_iris$Species)
 grepl("i",small_iris$Species)
-
-
 ```
 
 Tweet source:
