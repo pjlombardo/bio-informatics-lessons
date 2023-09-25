@@ -40,7 +40,7 @@ tweets<- tweets %>%
 ```
 
 ## The basics of logical vectors
-I like to think of logical vectors (sometimes called *boolean* vectors) as the answer key to a TRUE/FALSE quiz. The vector `logic1` below is an example; notice it just contains a collection of five values, which can either be `TRUE` or `FALSE`: 
+I like to think of logical vectors (sometimes called *boolean* vectors) as the answer key to a TRUE/FALSE quiz. The vector `logic1` below is an example; notice it just contains a collection of five values, which can be either `TRUE` or `FALSE`: 
 ```{r echo =T}
 logic1
 ```
@@ -67,10 +67,10 @@ Consider the following True/False quiz.
 ```{r}
 kbl(df_numbers2) %>% kable_styling()
 ```
-As we did above, use `R` to get create the answer key in a logical vector. (*Hint:* you will need to create your own `quiz_numbers2` vector of values to compare against 15. We got you started)
-```{r quiz-compare-15, exercise = TRUE}
-# Write your comparision
+As we did above, use `R` to get create the answer key in a logical vector. (*Hint:* you will need to create your own `quiz_numbers2` vector of values to compare against 15. We got you started.)
+```{r quiz-compare-15, exercise = TRUE,exercise.lines=3}
 quiz_numbers2 <- c( ... )
+# After setting your numbers, write your comparison below
 ```
 
 ```{r quiz-compare-15-hint-1}
@@ -202,7 +202,12 @@ Suppose I want to find out how many of the flowers in `small_iris` are setosa ir
 
 As we saw in the last section, and easy way to count something is to `sum()` up a logical vector, where the entries we care about are labeled as `TRUE`. Since the `Species` variable is text, we can create such a logical vector by checking for *equality* with the desired "setosa" label.
 
-Run the code below to see the logical vector. Then, use the `sum()` function to count the number of setosa irises in `small_iris`. Finally, write your own code to count the number of "virginica" irises.
+#### Exercise
+Run the code below to see the logical vector. Then, 
+
+* use the `sum()` function to count the number of setosa irises in `small_iris`. 
+* Finally, write your own code to count the number of "virginica" irises.
+
 ```{r small-iris-ex1, exercise=TRUE,exercise.lines=4}
 small_iris$Species == "setosa"
 ```
@@ -216,6 +221,7 @@ sum(small_iris$Species == "setosa")
 sum(small_iris$Species == "virginica")
 ```
 
+#### Exercise
 The not equal comparison, `!=`, works on text as well.  Using a similar coding approach as the previous exercise, count how many flowers in `small_iris` are ***not equal*** to `setosa`.
 ```{r small-iris-ex2, exercise=TRUE,exercise.lines=4}
 # Place your code here
@@ -244,7 +250,9 @@ post_message = "The vector `small_iris$Species` contains text recording the spec
 ```
 
 #### Exercises with `tweets`
-The `tweets` data frame contains several tweets pulled from a Kaggle data set (@tweet_data)^[To create the `tweets` dataframe, we used the command line to just pull the first thousand tweets from this much larger Kaggle data set.] Use the triangle in the upper right corner to see the `text` variable, which contains the tweets.
+The `tweets` data frame contains several tweets pulled from a Kaggle data set (@tweet_data)^[To create the `tweets` dataframe, we used the command line to just pull the first thousand tweets from this much larger Kaggle data set.] 
+
+Use the triangle in the upper right corner to see the `text` variable, which contains the tweets.
 ```{r}
 tweets %>% head()
 ```
