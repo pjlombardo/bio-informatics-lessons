@@ -43,7 +43,9 @@ tweet_df %>% names()
 dim(tweet_df)
 grepl("friend",tweet_df$text) %>% sum()
 grepl("@",tweet_df$text) %>% sum()
-grepl("name",tweet_df$text) %>% sum()
+grepl("#",tweet_df$text) %>% sum()
+grepl("good",tweet_df$text) %>% sum()
 grepl("(McDonald's|Chipotle)",tweet_df$text) %>% sum()
+
 ```
 

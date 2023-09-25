@@ -12,6 +12,7 @@ library(learnr)
 library(dplyr)
 library(ggplot2)
 library(knitr)
+library(shiny)
 library(kableExtra)
 knitr::opts_chunk$set(echo = FALSE)
 
@@ -26,6 +27,10 @@ df_numbers2<-data.frame(Question = sprintf("True or False: the number  ***%s*** 
 set.seed(321)
 students<-data.frame(height = round(rnorm(150, 68, 5),1),
                     IQ = round(rnorm(150, 100,8),0))
+
+quiz_text<-c("I like **cat**s", "I have to **cat**egorize", "I love dogs.","Just pla**cat**e him.")
+df_cat<-data.frame(Question = sprintf("*True or False*: the text  \"%s\"  contains the letter sequence ***cat***.",quiz_text),
+                   AnswerKey = grepl("cat",quiz_text))
 
 small_iris<-iris %>% select(Species,Sepal.Length) %>%
     slice(1:3, 51:53, 101:103)
@@ -177,6 +182,9 @@ sum(students$IQ == 115)/150
 ```
 
 
+#### Well done! Ready for more?
+
+
 
 ## Text comparisons
 We are also able to compare ***text*** in `R`.^[Text may also be referred to as "strings" or "characters". In `R`, these are often stored as **factors**, which are basically just character vectors with some added metadata.] However, text comparisons involve (mostly) different operators. In this section, we will discuss just a few of them: `==` and `!=`, the `%in%` operator, and the `grepl()` function.
@@ -228,7 +236,7 @@ The `%in%` operator in `R` will check if text is in a provided list.  For exampl
 small_iris$Species %in% c("virginica","versicolor")
 ```
 Why are the first three entries `FALSE`? *In your own words*, explain what the code does!
-```{r question-untidy-1}
+```{r in-operator-question}
 question("Ready to see an explanation?",
 answer("Yes.", correct = TRUE),
 post_message = "The vector `small_iris$Species` contains text recording the species of each flower.  The `%in%` operator checks whether a given value from this vector is  ***in***  the list provided: `c(\"virginica\",\"versicolor\")`.  <br></br> Since the list provided contains only `virginica` and `versicolor` as options, the first three entries are False because they correspond to `setosa` flowers.  The last six entries are True because these are either `virginica` or `versicolor`."
@@ -236,25 +244,192 @@ post_message = "The vector `small_iris$Species` contains text recording the spec
 ```
 
 #### Exercises with `tweets`
-The `tweets` data frame contains several tweets pulled from a Kaggle data set (@tweet_data)^[We used the command line to just pull the first thousand tweets from this much larger data set.]
+The `tweets` data frame contains several tweets pulled from a Kaggle data set (@tweet_data)^[To create the `tweets` dataframe, we used the command line to just pull the first thousand tweets from this much larger Kaggle data set.] Use the triangle in the upper right corner to see the `text` variable, which contains the tweets.
 ```{r}
-kbl(tweets %>% head()) %>% kable_styling()
+tweets %>% head()
+```
+(*Yes... we know... twitter is gone.  Think of them as text messages.*)
+
+By investigating the first six rows of this data set, we appear to be observing a semi-heated exchange between a customer and someone at sprint customer service.  Are all the tweets in the data frame from these two users?
+
+**Exercise.** Recall the `nrow()` command will tell us the number of rows in a data frame.  Below that code, write your own code using the `%in%` operator to see how many of the `author_id` values are either "115712" or "sprintcare".
+```{r tweets-ex1, exercise=TRUE,exercise.lines=4}
+nrow(tweets)
+# Place your code here
+```
+```{r tweets-ex1-hint-1}
+nrow(tweets)
+# Fill in the list
+tweets$author_id %in% c(...)
+# then sum this logical vector
+```
+```{r tweets-ex1-solution}
+nrow(tweets)
+sum(tweets$author_id %in% c("115712", "sprintcare"))
+```
+
+**Exercise.** What percentage of the tweets in this data set are classified as "inbound". (*Careful*: While the values in the `inbound` variable are True or False, this is not currently stored as a logical vector in `R`!)
+```{r tweets-ex2, exercise=TRUE,exercise.lines=4}
+#Place your code here
+```
+```{r tweets-ex2-hint-1}
+tweets$inbound == "True"
+# sum this and divide by the number of rows
+```
+```{r tweets-ex2-solution}
+sum(tweets$inbound == "True")/nrow(tweets)
+```
+
+***
+
+**Challenge:** Can you think of a way to re-write your answer to the previous exercise that uses the `!=` operator?
+
+***
+
+#### You're doing great!
+What if we want to see how often a certain word, like "good" or "bad", appears in the text of a tweet?  
+
+Well, for that we'll a function called `grepl()`!
+
+
+
+## Using `grepl()`
+The `grepl()` function helps us search text data for different patterns, i.e. specific sequences of letters and symbols. The functions returns a logical vector indicating whether a pattern appears in that piece of text.  
+
+Using our TRUE/FALSE quiz analogy, we can think of `grepl()` as a quick what to generate an answer key to the following quiz. 
+```{r}
+kbl(df_cat) %>% kable_styling()
+```
+Notice that 
+
+* We have added the **cat** emphasis above to help make the answer key clear.
+* Notice that **cat** is our "pattern", and it can appear *anywhere in the text*, even as part of a completely different word.
+
+Using `grepl()` is straightforward in simple cases; it asks for a `pattern` first, and then text to search through (using the argument `x`). For example,
+```{r echo = TRUE}
+grepl(pattern = "cat", x = "I like cats.")
+# We can drop the argument names, but remember the order!
+# the pattern must come first, then the text to be searched.
+grepl("cat", c("I like cats.","I love dogs."))
+```
+
+### `grepl()` with the `small_iris` data set
+Suppose we want to create a logical vector that identifies `setosa` flowers only.  Well, what "pattern" differentiates `setosa` from the other species of `virginica` and `versicolor`? There are many answers here, but one is that `setosa` contains the letter sequence **set**.
+
+Run the code below to verify this identifies the first three rows (the setosa irises) as `TRUE`.  Then, come up with two of your own "patterns" to distinguish this species of flower. Try them out!
+```{r grepl-ex1, exercise=TRUE,exercise.lines=3}
+grepl("set", small_iris$Species)
+# Try your own!
+```
+```{r grepl-ex1-hint-1}
+grepl("set", small_iris$Species)
+grepl("osa", small_iris$Species)
+#one more
+```
+```{r grepl-ex1-solution}
+grepl("set", small_iris$Species)
+grepl("osa", small_iris$Species)
+grepl("t", small_iris$Species)
+```
+
+```{r grepl-question1}
+question("Can you explain why `grepl(\"e\", small_iris$Species)` would not identify `setosa` only?",
+answer("Select and continue to see our explanation.", correct = TRUE),
+post_message = "The command `grepl(\"e\", small_iris$Species)` would look for an \"e\" *anywhere* in the searched text.  Since v**e**rsicolor contains an \"e\" also, this would identify those flowers as well.  It would come back False on `virginica` however, which does not have an \"e\". "
+)
+```
+
+### `grepl()` with the `tweets` data set
+So, which word will appear more often in the messages stored in `tweets$text`, "good" or "bad"? Well, go explore using `grepl()`. 
+
+**Exercise** Use the code below to count the number of occurrences of **bad** and **good** among the messages in the `text` variable of the `tweets` data frame. Don't forget to *sum()* your logical vectors!
+```{r grepl-ex2, exercise=TRUE,exercise.lines=6}
+# count good
+grepl(...)
+
+#count bad
+grepl(...)
+```
+```{r grepl-ex2-hint-1}
+# count good
+grepl("...", tweets$text)
+
+#count bad
+grepl("...", tweets$text)
+```
+```{r grepl-ex2-solution}
+# count good
+sum(grepl("good", tweets$text))
+
+#count bad
+sum(grepl("bad", tweets$text))
+```
+
+
+**Exercise.** In the last section, we saw a back-and-forth between a customer and Sprint customer service.  I wonder, does Verizon do customer service over twitter? Let's check to see if any tweets have "Verizon" appearing in the `text`.
+```{r grepl-ex3, exercise=TRUE,exercise.lines=2}
+# Here is a dplyr pipe to incorporate sum()
+grepl(...) %>% sum()
+
+```
+```{r grepl-ex3-hint-1}
+grepl("...", tweets$text) %>% sum()
+
+```
+```{r grepl-ex3-solution}
+sum(grepl("Verizon", tweets$text)) %>% sum()
+
+```
+
+**Exercise.** What percentage of the `text` messages in `tweets` contain the hashtag symbol?
+```{r grepl-ex4, exercise=TRUE,exercise.lines=2}
+# Here is a dplyr pipe to incorporate sum()
+grepl(...) %>% sum()/nrow(tweets)
+
+```
+```{r grepl-ex4-hint-1}
+grepl("...", tweets$text) %>% sum()/nrow(tweets)
+
+```
+```{r grepl-ex4-solution}
+sum(grepl("#", tweets$text)) %>% sum()/nrow(tweets)
 
 ```
 
 
+## Some `grepl()` cautions
+It is very easy to fool yourself with `grepl()`.  You think you did a pretty straightforward search, and you get some things returning, but the matches may not quite be what you expect. 
+
+#### Exploring on your own!
+In the text box, you can put in your own search patterns (*no need for the quotations*). Below it, the first ten messages that match your search criteria will appear.  Spend a minute or two exploring, before following the examples provided afterward.
+
+```{r, echo=FALSE}
+textInput("pattern", "Search Pattern", value="fun")
+tableOutput("textMatch")
+```
+
+```{r, context="server"}
+output$textMatch <- renderTable({
+    filter(tweets, grepl(input$pattern, tweets$text)) %>%
+    select(text) %>% slice(1:10)
+})
+```
+
+**Example.** Hey, let's read some funny **cat** messages. Use the tool above to search **cat**, and read the messages. Did *any* of them mention a cat?
+
+> Remember: the pattern can appear *anywhere* in the searched text, even as part of a completely different word!
+
+**Example** We saw 13 messages with **Verizon** in it. But, what if someone forgot to capitalize? Try searching **verizon** with a lowercase "v".
+
+> Keep in mind: the grepl() searches *are case sensitive*.
+
+Our general recommendation is to always look at some of the searched data after using `grepl()` to make sure your pattern is identifying what you hope it does.  To learn how to do that, though, we'll need another lesson.
 
 
-operators: `%in%` and basic `grepl()`
 
 
-Examples
 
-Examples with a data frame
 
-Application of counting and finding percentages for categories
-
-## Using `grepl()`
 
 ## Review exercises with new example
 
@@ -310,20 +485,6 @@ mtcars
 head(mtcars)
 ```
 
-
-### Shiny Example
-```{r, echo=FALSE}
-sliderInput("bins", "Number of bins:", min = 1, max = 50, value = 30)
-plotOutput("distPlot")
-```
-
-```{r, context="server"}
-output$distPlot <- renderPlot({
-  x <- faithful[, 2]  # Old Faithful Geyser data
-  bins <- seq(min(x), max(x), length.out = input$bins + 1)
-  hist(x, breaks = bins, col = 'darkgray', border = 'white')
-})
-```
 
 ### Quiz
 
