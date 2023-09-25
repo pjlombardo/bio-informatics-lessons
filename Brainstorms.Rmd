@@ -36,6 +36,9 @@ head -1000 twcs.csv >> new.csv
 
 ```{r}
 tweet_df<-read.csv('logical-vectors/data/twcs_small.csv',header=T)
+tweet_df2<-tweet_df %>%
+    mutate(text = gsub("(shit|damn|fuck|cock|pussy)","*swear*",text))
+write.csv(tweet_df2,'twcs_small_clean.csv',row.names = F)
 ```
 
 ```{r}
