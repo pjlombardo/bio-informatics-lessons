@@ -425,13 +425,12 @@ output$textMatch <- renderTable({
 
 Our general recommendation is to always look at some of the searched data after using `grepl()` to make sure your pattern is identifying what you hope it does.  To learn how to do that, though, we'll need another lesson.
 
-
-
-
-
-
+Lastly, the search patterns that we can use in functions like `grepl()` can be quite sophisticated. There is a special "syntax" or language called *regular expressions* that help us refine exactly what we want to find.  If you are interested, please see our introductory lesson on regular expressions (LINK HERE).
 
 ## Review exercises with new example
+
+Proper use of grepl() mutliple choice
+
 
 ## Conclusions
 Notes, comments, summaries.
