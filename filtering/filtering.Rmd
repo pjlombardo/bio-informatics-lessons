@@ -1,6 +1,8 @@
 ---
 title: "Logical Vectors and `filter()`"
-output: learnr::tutorial
+output: 
+    learnr::tutorial:
+        theme: "default"
 runtime: shiny_prerendered
 ---
 
@@ -11,20 +13,41 @@ library(ggplot2)
 library(knitr)
 library(kableExtra)
 knitr::opts_chunk$set(echo = FALSE)
+
+movies<-read.csv('data/Top_200_movies_cleaned.csv',header = T)
 ```
 
+## Introduction to filtering rows
+### Base `R`
+less readable
 
-## Using logical vectors to `filter()`
-Quick review of numerical comparisons, %in%, and grepl
+`df[row_nums, ]`
 
-## Application 1
+Quick mention of numerical comparisons, %in%, and grepl
 
-## Application 2
+`df[logical_vector, ]`
+
+## Using `filter()` from `dplyr` package
+
+
+## Application 1: Movies
+
+## Application 2: 
+
+## Conclusions
+Notes, comments, summaries.
+
+Links to related exercises and resources.
+
+
+## References
+<div id="refs"></div>
 
 
 ***
 
 ## Example exercises
+
 
 ### Exercise 
 

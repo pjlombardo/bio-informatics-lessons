@@ -57,15 +57,16 @@ grepl("(McDonald's|Chipotle)",tweet_df$text) %>% sum()
 
 
 ## Filtering lesson
+
+### Cleaning data set 
+[Top 200 movies of 2023](https://www.kaggle.com/datasets/mohammadrizwansajjad/top-200-movies-of-2023) 
+
 ```{r}
 movies<-read.csv('data/Movies_Top_200.csv',header =T,
                  na.strings = "'-")
 ```
 
 ```{r}
-# names(movies)
-# as_date(movies$Release.Date)
-
 movies %>%
     mutate(
         Release.month = month(as_date(Release.Date), label = T),
@@ -79,10 +80,11 @@ movies %>%
 ```
 
 ```{r}
-movies2
+write.csv(movies2, 'Top_200_movies_cleaned.csv',row.names = F)
 ```
 
+### brainstorm
 ```{r}
-write.csv(movies2, 'Top_200_movies_cleaned.csv',row.names = F)
+sum(movies2$Release.weekday %in% c("Fri","Sat"))/nrow(movies2)
 ```
 
