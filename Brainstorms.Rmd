@@ -6,6 +6,7 @@ output:
 ---
 ```{r}
 library(tidyverse)
+library(lubridate)
 ```
 
 
@@ -50,5 +51,38 @@ grepl("#",tweet_df$text) %>% sum()
 grepl("good",tweet_df$text) %>% sum()
 grepl("(McDonald's|Chipotle)",tweet_df$text) %>% sum()
 
+```
+
+
+
+
+## Filtering lesson
+```{r}
+movies<-read.csv('data/Movies_Top_200.csv',header =T,
+                 na.strings = "'-")
+```
+
+```{r}
+# names(movies)
+# as_date(movies$Release.Date)
+
+movies %>%
+    mutate(
+        Release.month = month(as_date(Release.Date), label = T),
+        Release.weekday = wday(as_date(Release.Date), labe = T),
+        Release.day = day(as_date(Release.Date)),
+        Total.Gross.Million = round(as.numeric(gsub("\\$","",gsub(",","",Total.Gross)))/1000000,2),
+        Theaters.Count = as.numeric(gsub(",","",Theaters))
+    ) %>% select(
+        Rank, Title, Total.Gross.Million, Release.month, Release.weekday, Release.day, Theaters.Count, Distributor
+    ) -> movies2
+```
+
+```{r}
+movies2
+```
+
+```{r}
+write.csv(movies2, 'Top_200_movies_cleaned.csv',row.names = F)
 ```
 
