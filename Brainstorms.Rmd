@@ -85,6 +85,24 @@ write.csv(movies2, 'Top_200_movies_cleaned.csv',row.names = F)
 
 ### brainstorm
 ```{r}
+movies<-movies2
 sum(movies2$Release.weekday %in% c("Fri","Sat"))/nrow(movies2)
+
+movies2 %>%
+    filter(grepl("\\s[Dd]ead\\s",Title)) %>%
+    select(Title)
+
+movies2 %>%
+    filter(grepl("Dead",Title)) %>%
+    select(Title)
+
+movies2 %>%
+    filter(grepl(".*\\sS.*r\\s.*",Title)) %>%
+    select(Title)
+```
+
+```{r}
+grepl("@sprintcare",tweets$text) %>% sum()
+grepl("@[Vv]erizon",tweets$text) %>% sum()
 ```
 

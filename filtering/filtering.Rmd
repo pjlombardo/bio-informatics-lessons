@@ -4,6 +4,7 @@ output:
     learnr::tutorial:
         theme: "default"
 runtime: shiny_prerendered
+bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -15,10 +16,38 @@ library(kableExtra)
 knitr::opts_chunk$set(echo = FALSE)
 
 movies<-read.csv('data/Top_200_movies_cleaned.csv',header = T)
+tweets<-read.csv('data/twcs_small_clean.csv', header = T)
+genes<-read.csv('data/exampleData.csv',header = T)
 ```
 
 ## Introduction to filtering rows
-### Base `R`
+It is often the case that our data sets will contain *more* observations than we actually need for a given task or analysis.^[Being able to remove rows from view or consideration is also a very important skill for *cleaning* data and for *exploring* data.]  Hence, we will often want to remove rows from a data frame before doing our work. 
+
+> We refer to the process of removing rows from a data frame as ***filtering rows***.^[We mainly use the "filtering rows" language to remind us of the `filter()` command we will use from the `dplyr` package.]
+
+For example, suppose we have a data set of all the movies released in the past 10 years. *However*, we intend to study only the movies released in the past two years.  Before doing our work, we would need to remove the movies in the data set that were released outside of the appropriate time period for our study.
+
+In `R`, we can choose the rows we want to keep by either 
+
+* listing the *row numbers* we want, or
+* identifying desired rows using *logical vectors*.
+
+We will introduce both approaches, but focus on the second.  Moreover, there are two syntaxes that we can use in `R`:
+
+* The syntax used in base `R`, and
+* A more readable approach using the `filter()` command from `dplyr` (@dplyr).
+
+For our money, the best approach (because it makes most sense to humans) is to use logical vectors in combination with the `filter()` command. So this will be the main goal of the lesson!
+
+To explore and practice *filtering with rows*, we will use three data sets:
+
+* `tweets`: a smaller, cleaned version of a data set of tweets from Kaggle (@tweet_data)
+* `movies`: a data frame of the top 200 grossing movies from 2023, also from Kaggle (@TopMovies2023)
+* `genes`: an example data set of genome information (Source???)
+
+#### Let's get started!
+
+## Base `R` filtering
 less readable
 
 `df[row_nums, ]`
@@ -29,10 +58,7 @@ Quick mention of numerical comparisons, %in%, and grepl
 
 ## Using `filter()` from `dplyr` package
 
-
-## Application 1: Movies
-
-## Application 2: 
+## Application and Review:
 
 ## Conclusions
 Notes, comments, summaries.
