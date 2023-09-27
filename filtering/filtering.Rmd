@@ -5,6 +5,8 @@ output:
         theme: "default"
 runtime: shiny_prerendered
 bibliography: references.bib
+biblio-style: "apalike"
+link-citations: true
 ---
 
 ```{r setup, include=FALSE}
@@ -48,16 +50,180 @@ To explore and practice *filtering with rows*, we will use three data sets:
 #### Let's get started!
 
 ## Base `R` filtering
-less readable
+Filtering rows (and selecting columns) in base `R` uses square braces appended to a data frame. The general syntax looks like `df[row_condition, columns_desired]`.
 
-`df[row_nums, ]`
+* the `row_condition` can either be a vector of row numbers that we want, ***or*** a logical vector.  If we provide a logical vector, we will get only those rows that correspond to `TRUE` in the logical vector.
+* the `columns_desired` is a list of column names we want in the smaller data frame.
 
-Quick mention of numerical comparisons, %in%, and grepl
+Let's consider an example with the `movies` data set, which records the rank, title, and box office gross revenue for the top 200 movies in 2023. Suppose we want the first five rows of the `movies` data frame, and only the `Title` and `Total.Gross.Million` measurements.  Remember that `1:5` generates a vector counting from 1 to 5, we could do the following:
+```{r echo =T}
+# Just a reminder
+1:5
+# below is the code to "slice" our iris data frame as we wanted
+movies[1:5, c("Title","Total.Gross.Million")]
+```
 
-`df[logical_vector, ]`
+We can also use a logical vector as our `row_condition`. (For a review on logical vectors, please visit this lesson (LINK HERE!!!!).) 
+
+**Exercise.** Recall that `movies$Total.Gross.Million < 300` will return a logical vector indicating each row where the `Total.Gross.Million` measurement is less than 300 (million). If we put the code for this logical vector in the first space of the square braces (i.e. `movies[ ..here.., columns_desired]`), the data frame we return will only include those rows that grossed less than 300 (million). Please do the following:
+
+* Run the code below to verify that *Indiana Jones and the Dial of Destiny* grossed less than 300 (million).
+* Write your own similar code to check which movies in the sample had gross earnings above 350 (million).
+
+```{r base-r-ex1, exercise = TRUE, exercise.lines = 3}
+movies[movies$Total.Gross.Million < 300, c("Title","Total.Gross.Million")]
+# Write your new code below
+
+```
+```{r base-r-ex1-hint-1}
+movies[movies$Total.Gross.Million < 300, c("Title","Total.Gross.Million")]
+# Write your new code below
+movies[movies$Total.Gross.Million >= ..., c("Title","Total.Gross.Million")]
+```
+```{r base-r-ex1-solution}
+movies[movies$Total.Gross.Million < 300, c("Title","Total.Gross.Million")]
+# Write your new code below
+movies[movies$Total.Gross.Million >= 350, c("Title","Total.Gross.Million")]
+```
+
+Just to check your work, only 6 movies should have grossed more than 300 million.
+
+### Moving forward with `dplyr`
+While it is good to know the "base-`R`" approach in case you see it in someone else's code, this approach has a number of shortcomings:
+
+* It takes a lot of writing to do fairly simple filtering of rows and selecting of columns;
+* It's not very "human readable," at least when compared to the alternative we are about to show you.
+* If you want to filter rows by a collection of conditions, the code gets unmanageable and difficult to read.
+
+In the next section, we will demonstrate how to use functions from the `dplyr` package to `filter()` rows and `select()` columns, with a particular emphasis on working with rows. 
+
+Since the `filter()` function will use logical vectors as inputs, take a moment to review some of the operators that create logical vectors. (We recommend this lesson (LINK HERE !!!).)
+```{r}
+kbl(
+    data.frame(Symbol = c("<","<=",">",">=","==","!=",
+                          "\\%in\\%", "grepl(`pattern`, `x`)"),
+               Meaning = c("strictly less than", "less than or equal", "strictly greater than", "greater than or equal", "equal to", "not equal to",
+                           "check if text appears in a list",
+                           "search `x` for a match with `pattern`"),
+    Example = c("`movies$Rank` < 10", 
+                "`movies$Rank` <= 10",
+                "`movies$Rank` > 150", 
+                "`movies$Rank` >=190",
+                "`movies$Release.weekday` ==\"Fri\"",
+                "`movies$Release.weekday` !=\"Fri\"",
+                "`movies$Release.weekday` %in% c(\"Fri\",\"Sat\")",
+                "grepl(\"Universal\",`movies$Distributor`)"))
+) %>% kable_styling()
+```
+
+**Quick, informal, review!** Go through each example in the table above. What kind of rows does each logical vector identify in the `movies` data set?
+
+```{r in-operator-question}
+question("Ready to see the answers?",
+answer("Yes.", correct = TRUE),
+post_message = "`movies$Rank < 10`: rows containing the top *nine* ranked movies. (Note the strict inequality!)<br><br>`movies$Rank <= 10`: rows containing the top ten ranked movies.<br><br>`movies$Rank > 150`: rows containing the movies ranked 151 or worse.<br><br>`movies$Rank >= 190`: rows containing the movies ranked 190 or worse. <br><br>`movies$Release.weekday ==\"Fri\"`: movies released on a Friday. <br><br>`movies$Release.weekday !=\"Fri\"`: movies *not* released on a Friday. <br><br>`movies$Release.weekday %in% c(\"Fri\",\"Sat\")`: movies released on a Friday or a Saturday. <br><br>`grepl(\"Universal\",movies$Distributor)`: Movies with a distributor with \"Universal\" in their name; likely just *Universal Pictures*."
+)
+```
+
+
+#### Let's go!
 
 ## Using `filter()` from `dplyr` package
+The `filter()` function from `dplyr` works by allowing use to provide a list of logical comparisons that we want all remaining rows to satisfy. We find the syntax to be more readable; here is an example:
+```
+movies %>%
+    filter(Total.Gross.Million > 300,
+           Distributor != "Universal Pictures")
+```
+The syntax allows us to read from left-to-right, top-to-bottom, just like we are reading a book. Looking at our code above, we can see
 
+1. We start with the `movies` data frame
+2. We `filter()` some rows according to the following two criteria:
+    a. The `Total.Gross.Million` measurement must be greater than 300, ***and***
+    b. The `Distributor` of the movie is ***not*** Universal Pictures.
+    
+Reading the appropriate `dplyr` code is like reading a recipe for how we "cooked" the final data frame.
+
+If we want to choose specific columns, we can follow up our `filter()` with a `select()` command where we can list our column names ***without needing quotes***.  
+
+**Exercise.** Please do the following:
+
+1. Run the code below to see how a `filter()` and `select()` pair work together.
+2. Modify the code to 
+    * return rows where the `Distributor` ***is*** "Universal Pictures" and the movie `Rank`s in the *top* ten;
+    * we see the title, total gross in millions, and the release weekday.
+    
+```{r filter-ex1, exercise = TRUE, exercise.lines = 6}
+# First run the code provided to get a feel for it.
+# Then MODIFY it to the specifications in part 2!
+movies %>%
+    filter(Total.Gross.Million > 300,
+           Distributor != "Universal Pictures") %>%
+    select(Title, Rank, Total.Gross.Million)
+```
+
+```{r filter-ex1-hint-1}
+# Keep modifying the code!
+movies %>%
+    filter(... <= 10,
+           Distributor ... "Universal Pictures") %>%
+    select(Title, Total.Gross.Million, ...)
+```
+
+```{r filter-ex1-hint-2}
+# Keep modifying the code!
+movies %>%
+    filter(Rank <= 10,
+           Distributor == "Universal Pictures") %>%
+    select(Title, Total.Gross.Million, ...)
+```
+
+```{r filter-ex1-solution}
+movies %>%
+    filter(Rank <= 10,
+           Distributor == "Universal Pictures") %>%
+    select(Title, Total.Gross.Million, Release.weekday)
+```
+
+
+
+**Exercise** 
+
+```{r filter-ex2, exercise = TRUE, exercise.lines = 6}
+# After running the code to get a feel for it, MODIFY it to the specifications above!
+movies %>%
+    filter(Total.Gross.Million > 300,
+           Distributor != "Universal Pictures") %>%
+    select(Title, Rank, Total.Gross.Million)
+```
+
+```{r filter-ex2-hint-1}
+# Keep modifying the code!
+movies %>%
+    filter(... <= 10,
+           Distributor ... "Universal Pictures") %>%
+    select(Title, Total.Gross.Million, ...)
+```
+
+```{r filter-ex2-hint-2}
+# Keep modifying the code!
+movies %>%
+    filter(Rank <= 10,
+           Distributor == "Universal Pictures") %>%
+    select(Title, Total.Gross.Million, ...)
+```
+
+```{r filter-ex2-solution}
+movies %>%
+    filter(Rank <= 10,
+           Distributor == "Universal Pictures") %>%
+    select(Title, Total.Gross.Million, Release.weekday)
+```
+
+
+[between()](https://dplyr.tidyverse.org/reference/between.html)
+[near()](https://dplyr.tidyverse.org/reference/near.html)
+[is.na()](https://rdrr.io/r/base/NA.html)
 ## Application and Review:
 
 ## Conclusions

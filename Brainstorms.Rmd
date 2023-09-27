@@ -99,6 +99,9 @@ movies2 %>%
 movies2 %>%
     filter(grepl(".*\\sS.*r\\s.*",Title)) %>%
     select(Title)
+
+movies %>% head()
+
 ```
 
 ```{r}
