@@ -92,9 +92,6 @@ quiz_numbers2 > 15
 
 
 
-
-
-
 ## Other ways to compare numbers!
 There are many ways to compare numbers in `R`, but these are the most common:
 ```{r}
@@ -389,7 +386,7 @@ sum(grepl("Verizon", tweets$text)) %>% sum()
 
 ```
 
-**Exercise.** What percentage of the `text` messages in `tweets` contain the hashtag symbol?
+**Exercise.** What percentage of the `text` messages in `tweets` contain the hashtag symbol, \#?
 ```{r grepl-ex4, exercise=TRUE,exercise.lines=2}
 # Here is a dplyr pipe to incorporate sum()
 grepl(...) %>% sum()/nrow(tweets)
@@ -400,8 +397,33 @@ grepl("...", tweets$text) %>% sum()/nrow(tweets)
 
 ```
 ```{r grepl-ex4-solution}
-sum(grepl("#", tweets$text)) %>% sum()/nrow(tweets)
+grepl("#", tweets$text) %>% sum()/nrow(tweets)
 
+```
+
+### Quick aside, using `!` on logical vectors
+If you place an exclamation point before a logical vector, it will switch all the True-False values. For example,
+```{r echo = T}
+grepl("dog", c("dog","hotdog","cool cat"))
+!grepl("dog", c("dog","hotdog","cool cat"))
+```
+
+With this in mind...
+
+**Exercise.** What percentage of the `text` messages in `tweets` ***do not contain*** the at-symbol, @?
+
+(*Note*: the order of operations with `!` gets tricky, so we do not recommend a `dplyr` pipe for this. The solution does show you what a dplyr pipe would look like though.)
+```{r grepl-ex5, exercise=TRUE,exercise.lines=2}
+# Here is a dplyr pipe to incorporate sum()
+!grepl(...)
+```
+```{r grepl-ex5-hint-1}
+sum(!grepl("...", tweets$text))
+```
+```{r grepl-ex5-solution}
+sum(!grepl("@", tweets$text))/nrow(tweets)
+# or
+(!grepl("@",tweets$text)) %>% sum()/nrow(tweets)
 ```
 
 

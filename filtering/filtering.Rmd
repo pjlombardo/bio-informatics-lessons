@@ -1,12 +1,13 @@
 ---
-title: "Logical Vectors and `filter()`"
+title: "Removing Rows from Data Frames"
+author: (Created by P. Lombardo)
 output: 
     learnr::tutorial:
         theme: "default"
+        progressive: true
 runtime: shiny_prerendered
 bibliography: references.bib
 biblio-style: "apalike"
-link-citations: true
 ---
 
 ```{r setup, include=FALSE}
@@ -18,14 +19,17 @@ library(kableExtra)
 knitr::opts_chunk$set(echo = FALSE)
 
 movies<-read.csv('data/Top_200_movies_cleaned.csv',header = T)
-tweets<-read.csv('data/twcs_small_clean.csv', header = T)
-genes<-read.csv('data/exampleData.csv',header = T)
+tweets<-read.csv('data/twcs_small_clean.csv',header = T)
+tweets<- tweets %>%
+    mutate(num_chars = sapply(text, function(x){length(strsplit(x,"")[[1]])}),
+           num_words = sapply(text, function(x){length(strsplit(x," ")[[1]])})) %>% 
+    select(author_id, num_chars, num_words, text)
 ```
 
 ## Introduction to filtering rows
 It is often the case that our data sets will contain *more* observations than we actually need for a given task or analysis.^[Being able to remove rows from view or consideration is also a very important skill for *cleaning* data and for *exploring* data.]  Hence, we will often want to remove rows from a data frame before doing our work. 
 
-> We refer to the process of removing rows from a data frame as ***filtering rows***.^[We mainly use the "filtering rows" language to remind us of the `filter()` command we will use from the `dplyr` package.]
+> We will refer to the process of removing rows from a data frame as ***filtering rows***.^[We mainly use the "filtering rows" language to remind us of the `filter()` command we will use from the `dplyr` package.]
 
 For example, suppose we have a data set of all the movies released in the past 10 years. *However*, we intend to study only the movies released in the past two years.  Before doing our work, we would need to remove the movies in the data set that were released outside of the appropriate time period for our study.
 
@@ -43,11 +47,12 @@ For our money, the best approach (because it makes most sense to humans) is to u
 
 To explore and practice *filtering with rows*, we will use three data sets:
 
-* `tweets`: a smaller, cleaned version of a data set of tweets from Kaggle (@tweet_data)
 * `movies`: a data frame of the top 200 grossing movies from 2023, also from Kaggle (@TopMovies2023)
-* `genes`: an example data set of genome information (Source???)
+* `tweets`: a smaller, cleaned version of a data set of tweets from Kaggle (@tweet_data)
+
 
 #### Let's get started!
+
 
 ## Base `R` filtering
 Filtering rows (and selecting columns) in base `R` uses square braces appended to a data frame. The general syntax looks like `df[row_condition, columns_desired]`.
@@ -85,8 +90,7 @@ movies[movies$Total.Gross.Million < 300, c("Title","Total.Gross.Million")]
 # Write your new code below
 movies[movies$Total.Gross.Million >= 350, c("Title","Total.Gross.Million")]
 ```
-
-Just to check your work, only 6 movies should have grossed more than 300 million.
+**Check your work:** Only 6 movies should have grossed more than 350 million.
 
 ### Moving forward with `dplyr`
 While it is good to know the "base-`R`" approach in case you see it in someone else's code, this approach has a number of shortcomings:
@@ -98,7 +102,7 @@ While it is good to know the "base-`R`" approach in case you see it in someone e
 In the next section, we will demonstrate how to use functions from the `dplyr` package to `filter()` rows and `select()` columns, with a particular emphasis on working with rows. 
 
 Since the `filter()` function will use logical vectors as inputs, take a moment to review some of the operators that create logical vectors. (We recommend this lesson (LINK HERE !!!).)
-```{r}
+```{r comparisons-table}
 kbl(
     data.frame(Symbol = c("<","<=",">",">=","==","!=",
                           "\\%in\\%", "grepl(`pattern`, `x`)"),
@@ -112,7 +116,8 @@ kbl(
                 "`movies$Release.weekday` ==\"Fri\"",
                 "`movies$Release.weekday` !=\"Fri\"",
                 "`movies$Release.weekday` %in% c(\"Fri\",\"Sat\")",
-                "grepl(\"Universal\",`movies$Distributor`)"))
+                "grepl(\"Universal\",`movies$Distributor`)")),
+    caption = "Table 1: Comparisons and functions for creating logical vectors in R."
 ) %>% kable_styling()
 ```
 
@@ -121,12 +126,13 @@ kbl(
 ```{r in-operator-question}
 question("Ready to see the answers?",
 answer("Yes.", correct = TRUE),
-post_message = "`movies$Rank < 10`: rows containing the top *nine* ranked movies. (Note the strict inequality!)<br><br>`movies$Rank <= 10`: rows containing the top ten ranked movies.<br><br>`movies$Rank > 150`: rows containing the movies ranked 151 or worse.<br><br>`movies$Rank >= 190`: rows containing the movies ranked 190 or worse. <br><br>`movies$Release.weekday ==\"Fri\"`: movies released on a Friday. <br><br>`movies$Release.weekday !=\"Fri\"`: movies *not* released on a Friday. <br><br>`movies$Release.weekday %in% c(\"Fri\",\"Sat\")`: movies released on a Friday or a Saturday. <br><br>`grepl(\"Universal\",movies$Distributor)`: Movies with a distributor with \"Universal\" in their name; likely just *Universal Pictures*."
+post_message = "`movies$Rank < 10`: rows containing the top *nine* ranked movies. (Note the strict inequality!)<br><br>`movies$Rank <= 10`: rows containing the top ten ranked movies.<br><br>`movies$Rank > 150`: rows containing the movies ranked 151 or worse.<br><br>`movies$Rank >= 190`: rows containing the movies ranked 190 or worse. <br><br>`movies$Release.weekday ==\"Fri\"`: movies released on a Friday. <br><br>`movies$Release.weekday !=\"Fri\"`: movies *not* released on a Friday. <br><br>`movies$Release.weekday %in% c(\"Fri\",\"Sat\")`: movies released on a Friday or a Saturday. <br><br>`grepl(\"Universal\",movies$Distributor)`: Movies with a distributor containing \"Universal\" in their name; likely just *Universal Pictures*."
 )
 ```
 
 
 #### Let's go!
+
 
 ## Using `filter()` from `dplyr` package
 The `filter()` function from `dplyr` works by allowing use to provide a list of logical comparisons that we want all remaining rows to satisfy. We find the syntax to be more readable; here is an example:
@@ -135,7 +141,7 @@ movies %>%
     filter(Total.Gross.Million > 300,
            Distributor != "Universal Pictures")
 ```
-The syntax allows us to read from left-to-right, top-to-bottom, just like we are reading a book. Looking at our code above, we can see
+The syntax allows us to read from left-to-right, top-to-bottom, just like we are reading a book.^[Also notice that we do not need to write the data frame name each time we specify a logical vector. Inside `filter()`, we write `Total.Gross.Million > 300` instead of `movies$Total.Gross.Million > 300`.  This saves a lot of typing, as does the auto-fill option in Rstudio!] Looking at our code above, we can see
 
 1. We start with the `movies` data frame
 2. We `filter()` some rows according to the following two criteria:
@@ -144,16 +150,21 @@ The syntax allows us to read from left-to-right, top-to-bottom, just like we are
     
 Reading the appropriate `dplyr` code is like reading a recipe for how we "cooked" the final data frame.
 
-If we want to choose specific columns, we can follow up our `filter()` with a `select()` command where we can list our column names ***without needing quotes***.  
+If we want to choose specific columns, we can follow up our `filter()` with a `select()` command, where we can list our column names ***without quotes***.^[The `dplyr` package also has functions to help us grab collections of column names, read about "selection helpers" [here](https://dplyr.tidyverse.org/reference/select.html). We will save these shortcuts for a different lesson.]
 
+<br>
 **Exercise.** Please do the following:
 
-1. Run the code below to see how a `filter()` and `select()` pair work together.
-2. Modify the code to 
-    * return rows where the `Distributor` ***is*** "Universal Pictures" and the movie `Rank`s in the *top* ten;
-    * we see the title, total gross in millions, and the release weekday.
+1. Run the code below to see how a `filter()` and `select()` work together.
+2. ***Then, modify the code*** to 
+    * return rows where 
+        * the `Distributor` ***is either*** "Universal Pictures" or "Lionsgate",  and 
+        * the movies rank in the *top* ten;
+    * we see the title, total gross in millions, and the release weekday variables.
+
+(*Note*: remember you can use `names(movies)` to list the variable names of the data frame.)
     
-```{r filter-ex1, exercise = TRUE, exercise.lines = 6}
+```{r filter-ex1, exercise = TRUE, exercise.lines = 7}
 # First run the code provided to get a feel for it.
 # Then MODIFY it to the specifications in part 2!
 movies %>%
@@ -166,7 +177,7 @@ movies %>%
 # Keep modifying the code!
 movies %>%
     filter(... <= 10,
-           Distributor ... "Universal Pictures") %>%
+           Distributor ... c("Universal Pictures","...")) %>%
     select(Title, Total.Gross.Million, ...)
 ```
 
@@ -174,57 +185,226 @@ movies %>%
 # Keep modifying the code!
 movies %>%
     filter(Rank <= 10,
-           Distributor == "Universal Pictures") %>%
+           Distributor ... c("Universal Pictures","Lionsgate")) %>%
     select(Title, Total.Gross.Million, ...)
 ```
 
 ```{r filter-ex1-solution}
 movies %>%
     filter(Rank <= 10,
-           Distributor == "Universal Pictures") %>%
+           Distributor %in% c("Universal Pictures","Lionsgate")) %>%
     select(Title, Total.Gross.Million, Release.weekday)
 ```
+**Check your work:** There should be exactly three movies appearing in this list.
 
 
+<br></br>
+**Exercise** Write your own code to return a data frame with only the `Title` and `Rank` variables, and only containing rows where:
 
-**Exercise** 
+* the letter sequence "me" appears somewhere in the `Title`
+* the `Rank` of the movie is in the top 100 (i.e. 1, 2, ... or 100)
+* the `Total.Gross.Million` falls between 100 and 300.
 
-```{r filter-ex2, exercise = TRUE, exercise.lines = 6}
-# After running the code to get a feel for it, MODIFY it to the specifications above!
-movies %>%
-    filter(Total.Gross.Million > 300,
-           Distributor != "Universal Pictures") %>%
-    select(Title, Rank, Total.Gross.Million)
+We gave you some starter code for this exercise. Here are two suggestions as you begin thinking about your code:
+
+* For each bullet-point above, think about the comparison (`<`, `>`, ...) or function (`grepl()`, ...) that will help you identify the rows that satisfy the criterion. (See Table 1 from the previous section for a more complete list.)
+* For the last bullet point, you could consider using the `between()` function from `dplyr`, [(documentation here)](https://dplyr.tidyverse.org/reference/between.html), but it is not necessary.
+
+```{r filter-ex2, exercise = TRUE, exercise.lines = 8}
+movies %>% 
+    filter(
+        ...
+    ) %>% 
+    select(...)
 ```
 
 ```{r filter-ex2-hint-1}
-# Keep modifying the code!
-movies %>%
-    filter(... <= 10,
-           Distributor ... "Universal Pictures") %>%
-    select(Title, Total.Gross.Million, ...)
+movies %>% 
+    filter(
+        ...
+    ) %>% 
+    select(Title, Rank)
 ```
 
 ```{r filter-ex2-hint-2}
-# Keep modifying the code!
-movies %>%
-    filter(Rank <= 10,
-           Distributor == "Universal Pictures") %>%
-    select(Title, Total.Gross.Million, ...)
+movies %>% 
+    filter(
+        grepl(..., Title),
+        ...
+    ) %>% 
+    select(Title, Rank)
+```
+
+```{r filter-ex2-hint-3}
+movies %>% 
+    filter(
+        grepl(..., Title),
+        Rank <= ...,
+        between(Total.Gross.Million, ..., ...)
+    ) %>% 
+    select(Title, Rank)
 ```
 
 ```{r filter-ex2-solution}
-movies %>%
-    filter(Rank <= 10,
-           Distributor == "Universal Pictures") %>%
-    select(Title, Total.Gross.Million, Release.weekday)
+movies %>% 
+    filter(
+        grepl("me", Title),
+        Rank <=100,
+        between(Total.Gross.Million, 100, 300)
+    ) %>% 
+    select(Title, Rank)
+```
+**Check your work:** Only two movies will satisfy this criteria.
+
+### Amazing work!
+Our last section has some practice applications with the `tweets` data frame. These will give you a great opportunity to practice with using logical vectors in conjunction with `filter()` and `select()` to create the data frame of your dreams!
+
+
+## Applications with `tweets`
+Recall that the `tweets` data frame contains a sample of real tweets. Please review the data frame below. (Remember, the black triangle in the upper-right corner shows more columns of the data frame.) 
+```{r echo=TRUE}
+head(tweets)
+```
+It is not obvious what the middle two variables measure, so note that 
+
+* `num_chars`: counts the number of "characters" in the `text` entry. In other words, it is the total count of letters, numbers, spaces, and symbols that appear in the tweet.
+* `num_words`: counts the number of "words" in the `text` entry.  Here a "word" is interpreted as contiguous letters, numbers, or symbols with no spaces. For example, "\@11213" has one word, but "\@11231 Hi Maizy" has three words.
+
+
+### Exercises!
+Using what you have learned in this lesson, write code that creates the data frames desribed below.  So that you can verify your work, we list the number of rows that should appear in the final data frame.
+
+**Exercise**.  Which `author_id` names have the word "Care" in them? (The capital C is important!) To answer this question:
+
+1. Create a data frame that has only one variable, `author_id`, and only returns rows where the `author_id` contains the letter sequence "Care".
+2. When you have your data frame ready, pipe the data frame into the `distinct()` command. (I.e. `data frame code %>% distinct()`)
+
+```{r tweets-ex1, exercise = TRUE, exercise.lines =5}
+tweets %>%
+    ...
 ```
 
+```{r tweets-ex1-hint-1}
+tweets %>%
+    filter(...) %>%
+    select(...) %>%
+    distinct()
+```
 
-[between()](https://dplyr.tidyverse.org/reference/between.html)
-[near()](https://dplyr.tidyverse.org/reference/near.html)
-[is.na()](https://rdrr.io/r/base/NA.html)
-## Application and Review:
+```{r tweets-ex1-hint-2}
+tweets %>%
+    filter(...) %>%
+    select(author_id) %>%
+    distinct()
+```
+
+```{r tweets-ex1-hint-3}
+tweets %>%
+    filter(grepl("...",...)) %>%
+    select(author_id) %>%
+    distinct()
+```
+
+```{r tweets-ex1-solution}
+tweets %>%
+    filter(grepl("Care",author_id)) %>%
+    select(author_id) %>%
+    distinct()
+```
+**Check your work:** There should be three unique author IDs with "Care" in them.
+<br></br>
+
+**Exercise**. Our friend is looking for a particular kind of tweet message.  She wants:
+
+1. It must come from a source where the `author_id` contains "Help", because she wants an example of a customer service tweet;
+2. The `text` should not contain the hashtag symbol, \#; (*Hint:* use `!grepl(...)`)
+3. the number of characters (`num_chars`) should be less than 40.
+
+With these kind of rows selected, she wants the `author_id`, `num_chars`, and the text of the tweet.
+
+```{r tweets-ex2, exercise = TRUE, exercise.lines = 6}
+tweets %>%
+    ...
+```
+
+```{r tweets-ex2-hint-1}
+tweets %>%
+    filter(grepl(...),
+       !grepl(...),
+       num_chars ...) 
+
+```
+
+```{r tweets-ex2-hint-2}
+tweets %>%
+    filter(grepl("...",author_id),
+       !grepl("...",text),
+       num_chars < ...) %>%
+    select(author_id, num_chars, text)
+```
+
+```{r tweets-ex2-hint-3}
+tweets %>%
+    filter(grepl("Help",author_id),
+       !grepl("...",text),
+       num_chars < 40) %>%
+    select(author_id, num_chars, text)
+```
+
+```{r tweets-ex2-solution}
+tweets %>%
+    filter(grepl("Help",author_id),
+       !grepl("#",text),
+       num_chars < 40) %>%
+    select(author_id, num_chars, text)
+```
+**Check your work:** This should return only *one* message from AmazonHelp!
+
+<br></br>
+
+
+**Exercise**.  Create a data frame where the tweet text contains "\@Verizon" somewhere, there are fewer than 100 characters, and between 5 and 15 words. Return the `text` of the tweet only.
+
+```{r tweets-ex3, exercise = TRUE, exercise.lines = 6}
+tweets %>%
+    ...
+```
+
+```{r tweets-ex3-hint-1}
+tweets %>%
+    filter(grepl(...),
+           between(...),
+           num_chars ...) %>%
+    select(...)
+```
+
+```{r tweets-ex3-hint-2}
+tweets %>%
+    filter(grepl("...", text),
+           between(num_words, ..., ...),
+           num_chars < ...) %>%
+    select(text)
+```
+
+```{r tweets-ex3-hint-3}
+tweets %>%
+    filter(grepl("...", text),
+           between(num_words, 5, 15),
+           num_chars < 100) %>%
+    select(text)
+```
+
+```{r tweets-ex3-solution}
+tweets %>%
+    filter(grepl("@Verizon", text),
+           between(num_words, 5, 15),
+           num_chars < 100) %>%
+    select(text)
+```
+**Check your work:** There should be extactly five rows here.
+
+### Great work!
+
 
 ## Conclusions
 Notes, comments, summaries.
@@ -232,88 +412,6 @@ Notes, comments, summaries.
 Links to related exercises and resources.
 
 
-## References
+### References
 <div id="refs"></div>
-
-
-***
-
-## Example exercises
-
-
-### Exercise 
-
-*Here's a simple exercise with an empty code chunk provided for entering the answer.*
-
-Write the R code required to add two plus two:
-
-```{r two-plus-two, exercise=TRUE}
-
-```
-
-### Exercise with Code
-
-*Here's an exercise with some prepopulated code as well as `exercise.lines = 5` to provide a bit more initial room to work.*
-
-Now write a function that adds any two numbers and then call it:
-
-```{r add-function, exercise=TRUE, exercise.lines = 5}
-add <- function() {
-  
-}
-```
-
-## Topic 2
-
-### Exercise with Hint
-
-*Here's an exercise where the chunk is pre-evaluated via the `exercise.eval` option (so the user can see the default output we'd like them to customize). We also add a "hint" to the correct solution via the chunk immediate below labeled `print-limit-hint`.*
-
-Modify the following code to limit the number of rows printed to 5:
-
-```{r print-limit, exercise=TRUE, exercise.eval=TRUE}
-mtcars
-```
-
-```{r print-limit-hint}
-head(mtcars)
-```
-
-
-### Shiny Example
-```{r, echo=FALSE}
-sliderInput("bins", "Number of bins:", min = 1, max = 50, value = 30)
-plotOutput("distPlot")
-```
-
-```{r, context="server"}
-output$distPlot <- renderPlot({
-  x <- faithful[, 2]  # Old Faithful Geyser data
-  bins <- seq(min(x), max(x), length.out = input$bins + 1)
-  hist(x, breaks = bins, col = 'darkgray', border = 'white')
-})
-```
-
-### Quiz
-
-*You can include any number of single or multiple choice questions as a quiz. Use the `question` function to define a question and the `quiz` function for grouping multiple questions together.*
-
-Some questions to verify that you understand the purposes of various base and recommended R packages:
-
-```{r quiz}
-quiz(
-  question("Which package contains functions for installing other R packages?",
-    answer("base"),
-    answer("tools"),
-    answer("utils", correct = TRUE),
-    answer("codetools")
-  ),
-  question("Which of the R packages listed below are used to create plots?",
-    answer("lattice", correct = TRUE),
-    answer("tools"),
-    answer("stats"),
-    answer("grid", correct = TRUE)
-  )
-)
-```
 

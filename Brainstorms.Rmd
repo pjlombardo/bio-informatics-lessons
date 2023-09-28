@@ -97,10 +97,18 @@ movies2 %>%
     select(Title)
 
 movies2 %>%
-    filter(grepl(".*\\sS.*r\\s.*",Title)) %>%
+    filter(grepl("Man",Title),
+           Total.Gross.Million <500,
+           Total.Gross.Million >200) %>%
     select(Title)
 
-movies %>% head()
+movies2 %>%
+    filter(grepl("me",Title),
+           Rank <= 100,
+           Total.Gross.Million>100,
+           Total.Gross.Million<300) %>%
+    select(Title)
+movies %>% select(Title)
 
 ```
 
@@ -108,4 +116,36 @@ movies %>% head()
 grepl("@sprintcare",tweets$text) %>% sum()
 grepl("@[Vv]erizon",tweets$text) %>% sum()
 ```
+
+
+```{r}
+tweets %>%
+    filter(author_id=="sprintcare") %>%
+    select(text)
+
+tweets %>%
+    filter(grepl("@sprintcare",text)) %>%
+    select(text)
+
+tweets %>%
+    filter(author_id=="SpotifyCares") %>%
+    select(text)
+
+(tweets$author_id %>% unique())[tweets$author_id %>% unique() %>% grepl("care",.)]
+
+(tweets$author_id %>% unique())[tweets$author_id %>% unique() %>% grep("^[A-Za-z]",.)]
+
+tweets %>%
+    filter(grepl("concern",text)) %>%
+    select(author_id,text)
+```
+```{r}
+tweets %>%
+    filter(grepl("Help",author_id))
+```
+
+
+
+
+
 
