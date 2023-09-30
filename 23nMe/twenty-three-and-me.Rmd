@@ -1,5 +1,6 @@
 ---
-title: "Template `learnr` tutorial"
+title: "An Example with 23 and Me Data"
+author: (Created by P. Lombardo)
 output: learnr::tutorial
 runtime: shiny_prerendered
 ---
@@ -7,7 +8,8 @@ runtime: shiny_prerendered
 ```{r setup, include=FALSE}
 library(learnr)
 library(dplyr)
-library(ggplot2)
+library(knitr)
+library(kableExtra)
 knitr::opts_chunk$set(echo = FALSE)
 ```
 

@@ -13,7 +13,6 @@ biblio-style: "apalike"
 ```{r setup, include=FALSE}
 library(learnr)
 library(dplyr)
-library(ggplot2)
 library(knitr)
 library(kableExtra)
 knitr::opts_chunk$set(echo = FALSE)
