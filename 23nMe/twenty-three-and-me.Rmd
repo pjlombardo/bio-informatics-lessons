@@ -12,14 +12,457 @@ library(dplyr)
 library(knitr)
 library(kableExtra)
 knitr::opts_chunk$set(echo = FALSE)
+
+gene_df<-read.csv('data/exampleData.csv',header = T)
+gene_df %>% select(rsid, associated_variant_risk_allele,
+                   genotype, phenotype_description) ->gene_df
+
+my_search_fxn <- function(allele, genotype){
+    # put the arguments in the right place
+    if (allele == ""){
+        FALSE
+    } else {
+        grepl(allele, genotype)
+    }
+}
 ```
 
 
 ## Our challenge today!
-Overview data and our task.  (@23nMe)
+Welcome! Today we have a very specific task to complete that will use some familiar techniques, like filtering rows and using `grepl()`, while also reviewing some programming structures: loops and if-else statements.
 
-### Tools for the job and link
+We are working with a small subset of data from a 23andMe analysis (@23nMe). Specifically, ***Need more detail here***. Let's take a look at the data frame `gene_df`:
+```{r echo =TRUE}
+head(gene_df,4)
+```
+The variables are as follows:
 
+* `rsid`: an ID for the position?
+* `associated_variant_risk_allele`: an allele associated with the risk of problems with the functions described in `phenotype_description`.
+* `genotype`: the genotype in that position?
+* `phenotype_description`: a biological process that is associated with ceratin risk alleles in a given location
+
+<blockquote>Task: We want to `filter()` our data frame so that we only include rows where
+
+1. The `associated_variant_risk_allele` *for that row* is not empty, and
+2. The `associated_variant_risk_allele` letter *for that row* appears ***somewhere*** in the `genotype` sequence *for that row*.
+</blockquote>
+<br>
+**Quick Example.** Let's look at the a few rows of `gene_df` and explain why we would keep or drop the row:
+```{r}
+data.frame(rsid = gene_df$rsid[c(1:3,30)],
+           risk_allele = gene_df$associated_variant_risk_allele[c(1:3,30)],
+           genotype = gene_df$genotype[c(1:3,30)],
+           decision = c(
+               "**Keep** row; A matches the first letter of AG",
+               "Drop row; A does not match any letters of GG",
+               "Drop row; the risk allele is empty",
+               "**Keep** row; G matches the second letter of AG"
+           )) %>% kbl() %>% kable_styling()
+```
+
+**Practice.**
+```{r keep-or-drop-qu}
+set.seed(1012)
+sample_rows<-c(sample(102,4),4)
+question(paste("Below we present some rows from `gene_df`.  Select all the rows that we want to *keep* in the data frame.",
+                 data.frame(rsid = gene_df$rsid[sample_rows],
+           risk_allele = gene_df$associated_variant_risk_allele[sample_rows],
+           genotype = gene_df$genotype[sample_rows]) %>% kbl() %>% kable_styling()),
+    answer("Row 1"),
+    answer("Row 2"),
+    answer("Row 3", correct = TRUE),
+    answer("Row 4", correct = TRUE),
+    answer("Row 5"),
+    allow_retry = T,
+    # random_answer_order = T,
+    incorrect = paste(random_encouragement(),"Review the criteria present in the Task, as well as our quick example."),
+    post_message = random_praise()
+  )
+```
+
+
+### Tools for the job
+A standard way of removing rows from a data frame involves passing a logical vector as an argument to the `filter()` command from `dplyr`. For example, `iris %>% filter(Sepal.Length > 4.5)` would only keep rows where the `Sepal.Length` variable is greater than 4.5.  We will use this approach to create our data frame; however, *creating a logical vector based on the criteria above is not straightforward!*
+
+We have a two potential difficulties with creating our logical vector: 
+
+1. What we do with a row depends on the value of the  `associated_variant_risk_allele`: 
+    a. If the allele value is a letter, we proceed with checking it against the `genotype`.
+    b. If the allele value is empty, `""`, we want to drop the row.
+    
+2. What we look for in the `genotype` variable *changes* depending on the row. For some rows, we might look for "A", but for others we might look for "G".  How can continually update our search criteria?
+
+We have a few tools at our disposal to help us. First, searching through the `genotype` for a given letter is a great application of the `grepl()` function.^[To review this function, see this related lesson (LINK HERE!!!!).] For example, suppose we want to check if "A" appears in "AG"; we could use `grepl("A", "AG")`.
+
+**Practice.**
+```{r grepl-warm-up}
+question("Select all the grepl() commands below that would return a value of TRUE.",
+    answer("`grepl(\"A\",\"AG\")`",correct = TRUE),
+    answer("`grepl(\"T\",\"GG\")`"),
+    answer("`grepl(\"G\",\"CG\")`",correct = TRUE),
+    answer("`grepl(\"\",\"GT\")`",correct = TRUE),
+    answer("`grepl(\"G\",\"AT\")`"),
+    allow_retry = T,
+    random_answer_order = T,
+    incorrect = paste(random_encouragement(),"Be careful with the empty string..."),
+    post_message = random_praise()
+  )
+```
+
+
+### You're doing great!
+Using `grepl()` will help us with our searches, but how do we deal with the the two step process, and the changing search criteria? One approach is to rely on some old programming structures: if-else statements and loops! 
+
+Ready to move on?
+
+## if-else statements
+An if-else statement is a great way to code multi-step processes. We think it's best to work linguistically by writing a sentence to describe the process. Try to make your sentence use the words **if** and **else** to describe the following process:
+
+    a. If the allele value is a letter, we proceed with checking it against the `genotype`.
+    b. If the allele value is empty, `""`, we want to drop the row.
+    
+This sentence will help reveal the structure of the code you will write.  Compare your sentence with ours.
+```{r if-else-sentence}
+  question("Did you write your sentence? Are you ready to see ours?",
+    answer("Yes", correct = TRUE),
+    post_message = "**If** the `associated_variant_risk_allele` is empty or missing, **then** skip the row by returning FALSE. **Else**, perform the search on `genotype`."
+  )
+```
+
+Here's how we translate our linguistic sentence into code:
+
+> **If** some condition, **then** directions. **Else**, some new directions.
+```
+if (some_condition) {
+    directions
+} else {
+    new_directions
+}
+```
+
+(*Note*: The "condition" in an if-else statement is a *logical value* (either `TRUE` or `FALSE`), so we often use text or number comparisons inside that space. You will see below.)
+
+The code provided below runs the if-else statement where the search criterion is "A" and we look at a genotype of "GG". Recall we first want to check if "A" is empty (or `""`, nothing inside the quotes), if it is we want to return `FALSE`, and otherwise we want to search "GG" for the letter "A".
+```{r echo =T}
+if ("A" == ""){
+    FALSE
+} else {
+    grepl("A","GG")
+}
+```
+The output is `FALSE` because "A" does not appear anywhere in "GG".
+
+<br>
+**Exercise.** Re-write the code above to use search criterion of "C" for a genotype of "TC". Our output should be `TRUE`.
+```{r if-else-code, exercise = TRUE, exercise.lines = 7}
+# Place your code here
+```
+```{r if-else-code-hint-1}
+if ("..." == ""){
+    FALSE
+} else {
+    grepl("...","...")
+}
+```
+```{r if-else-code-hint-2}
+if ("C" == ""){
+    FALSE
+} else {
+    grepl("C","...")
+}
+```
+```{r if-else-code-solution}
+if ("C" == ""){
+    FALSE
+} else {
+    grepl("C","TC")
+}
+```
+
+### Creating a function
+Changing the search criteria and the genotype manually is a bit awkward, so let's wrap this two-step process inside our own function! In the exercise below, we create a function called `my_search_fxn()` with two arguments:
+
+* `allele`: the value you want to use for your search (e.g. `"A"`, `"C"`, or the empty string `""`.)
+* `genotype`: the genotype you are going to look through using the `search` entry (e.g. `"AT"`, `"TC"`, `"GG"`). 
+
+The syntax for the function is set up for you, but you need to put the function arguments in the appropriate places! The last line calls your function to test it. If you did the work well, it should return a `TRUE`.
+<br>
+**Exercise**
+```{r search_fxn, exercise = TRUE, exercise.lines = 10}
+my_search_fxn <- function(allele, genotype){
+    # put the arguments in the right place
+    if (... == ""){
+        FALSE
+    } else {
+        grepl(..., ...)
+    }
+}
+
+my_search_fxn("A","AA")
+```
+
+```{r search_fxn-hint-1}
+my_search_fxn <- function(allele, genotype){
+    # put the arguments in the right place
+    if (allele == ""){
+        FALSE
+    } else {
+        grepl(..., ...)
+    }
+}
+
+my_search_fxn("A","AA")
+```
+```{r search_fxn-hint-2}
+my_search_fxn <- function(allele, genotype){
+    # put the arguments in the right place
+    if (allele == ""){
+        FALSE
+    } else {
+        grepl(allele, ...)
+    }
+}
+
+my_search_fxn("A","AA")
+```
+```{r search_fxn-solution}
+my_search_fxn <- function(allele, genotype){
+    # put the arguments in the right place
+    if (allele == ""){
+        FALSE
+    } else {
+        grepl(allele, genotype)
+    }
+}
+
+my_search_fxn("A","AA")
+```
+(**Note:** The last exercise of this section will work whether you correctly finished this previous exercise. Make sure you understand the solution provided, and get help if you are lost!)
+
+Now that we have written a function to encapsulate our two-step process, let's test to make sure it works.  The general syntax is `my_search_fxn(allele, genotype)`. So if I wanted to check the return value for searching "A" on genotype "GG", I would use: `my_search_fxn("A","GG")`.
+
+<br>
+**Exercise.** It is critical to always test your functions *before using them! The line provided below tests whether "A" appears in "GG". To fully test our function, write code to test the following:
+
+* Look for `""` in `"AG"`;
+* Look for `"T"` in `"AT"`.
+
+```{r search_fxn_test, exercise = TRUE, exercise.lines = 4, exercise.setup = "search_fxn-solution"}
+my_search_fxn("A","GG")
+# Write code for the other two searches bulleted above
+```
+```{r search_fxn_test-hint-1}
+my_search_fxn("A","GG")
+# Write code for the other two searches bulleted above
+my_search_fxn("...","...")
+my_search_fxn("...","...")
+```
+```{r search_fxn_test-hint-2}
+my_search_fxn("A","GG")
+# Write code for the other two searches bulleted above
+my_search_fxn("","AG")
+my_search_fxn("...","...")
+```
+```{r search_fxn_test-solution}
+my_search_fxn("A","GG")
+# Write code for the other two searches bulleted above
+my_search_fxn("","AG")
+my_search_fxn("T","AT")
+```
+*Is your function working properly?* You should get FALSE, FALSE, TRUE as outputs.
+
+### Great work! Let's keep going!
+
+## Basic for-loop
+We now have `my_search_fxn(allele, genotype)` to run our two step process: check for an empty string `""`, if it's empty return `FALSE`, otherwise use `allele` as the search pattern for `genotype`.
+
+```{r loop-setup, include = FALSE}
+my_search_fxn <- function(allele, genotype){
+    # put the arguments in the right place
+    if (allele == ""){
+        FALSE
+    } else {
+        grepl(allele, genotype)
+    }
+}
+```
+
+We can now address our final issue: ***the search criteria (`allele`) and the genotype change depending on the row.***
+
+A standard approach would be to apply `my_search_fxn` to each row one at at time, and store the answer sequentially. After doing this for each row, we would create a logical vector with the appropriate TRUE/FALSE values.  To do this, we can use a for-loop, where an index `i` increments to identify each row of our data frame.
+
+Let's warm up with for-loops by considering the following example:
+```{r echo = T}
+for (i in 1:5){
+    #instructions here.
+    print(2*i)
+}
+```
+The loop works as follows.  The looping variable `i` will take on all the values in `1:5`, which remember is simply a vector with 1, 2, 3, 4, and 5 in it.  So,
+
+* `i` starts at the value of 1, and then we execute the "instructions"
+    * In other words we print `2*i`, which in our case is `2*1 = 2`.
+* Now `i` takes on the next value, which is 2. With `i` equaling 2, we execute the "instructions"
+    * printing `2*i` with `i` equal to 2, we get 4.
+* ... keep on looping ...
+
+This loop continues until `i` has had a turn as each value in 1 through 5, and the "instructions" were performed for each of these values.
+
+### Using a loop for our example
+How does this help us?  Well, we can use `i` to identify a given *row* of our `gene_df` data frame. Recall that `df[3,"col_name"]` will select only the third row of the data frame `df` and return the value from the "col_name" variable. So, for example, using `df[i,"rsid"]` inside a loop, would get the `rsid`-value for each row as `i` loops through the possible rows.
+
+**Practice.** Let's write a loop that just gives the `genotype` for the first 4 rows of `gene_df`. Inside our "loop instructions" we use the `df[i, "col_name"]` syntax.
+```{r loop-basic, exercise = TRUE, exercise.lines = 4}
+for (i in 1:...){
+    print(gene_df[..., "..."])
+}
+```
+```{r loop-basic-hint-1}
+for (i in 1:4){
+    print(gene_df[..., "genotype"])
+}
+```
+```{r loop-basic-solution}
+for (i in 1:4){
+    print(gene_df[i, "genotype"])
+}
+```
+
+<br>
+**Exercise.** Next, let's use `my_search_fxn(allele, genotype)` on the first four rows of `gene_df`. Remember 
+
+* the `allele` argument should come from `associated_variant_risk_allele` variable of `gene_df`
+* the `genotype` argument should come from `genotype` variable of `gene_df`
+
+```{r loop-app, exercise = TRUE, exercise.lines = 7, exercise.setup="loop-setup"}
+for (i in 1:4){
+    print(
+        my_search_fxn(...,
+                      ...)
+    )
+}
+```
+```{r loop-app-hint-1}
+for (i in 1:4){
+    print(
+        my_search_fxn(gene_df[i,"..."],
+                      gene_df[i,"..."])
+    )
+}
+```
+```{r loop-app-hint-2}
+for (i in 1:4){
+    print(
+        my_search_fxn(gene_df[i,"..."],
+                      gene_df[i,"genotype"])
+    )
+}
+```
+```{r loop-app-solution}
+for (i in 1:4){
+    print(
+        my_search_fxn(gene_df[i,"associated_variant_risk_allele"],
+                      gene_df[i,"genotype"])
+    )
+}
+```
+**Check:** The answers should be `TRUE, FALSE, FALSE, FALSE`.
+
+### Storing the answers of a loop
+We are not really interested in a print out of the `my_search_fxn()` values. Instead, we would like to store these value in a logical vector so that we can use it inside a `filter()` command. 
+
+In `R`, to store the output of a loop, we first create a storage vector (`our_logic_vector`), and then inside the loop we assign the output of our instructions to the `i`th component of the storage vector. 
+
+**Exercise.** Here's an example of storing the answer for the first four rows. On your own, write a description of what each line of the code is doing.
+```{r echo = T}
+our_logic_vector <- logical(4)
+
+for (i in 1:4){
+        temp_val<-my_search_fxn(gene_df[i,"associated_variant_risk_allele"],
+                      gene_df[i,"genotype"])
+        
+        our_logic_vector[i]<-temp_val
+}
+
+our_logic_vector
+```
+(*Note*: The last line displays the contents of `our_logic_vector` so that we can see the loop worked!)
+
+```{r storing-loop}
+  question("Did you write your explanation? Are you ready to see ours?",
+    answer("Yes", correct = TRUE),
+    post_message = "`our_logic_vector <- logical(4)` <br>This creates a logical vector of length 4 (one spot for each row of our loop) <br><br> `for (i in 1:4){`  <br>Set the index variable `i` to take values 1, 2, 3, 4. <br><br> `temp_val <- my_search_fxn(gene_df[i,\"associated_variant_risk_allele\"],` <br>Stores the output of my_search_fxn() for the i-th row in a temporary variable called `temp_val` <br><br> `our_logic_vector[i]<-temp_val`<br> Takes that temporary value and assigns it to the i-th position of our storage vector<br><br> We then close the loop with `}` and use the last line to print to contents of `our_logic_vector` to make sure everything worked."
+  )
+```
+
+### We're nearly there! 
+#### Let's review and put it all together.
+
+## Revising and executing the plan
+Recall the challenge for the day.
+
+<blockquote>Task: We want to `filter()` our data frame so that we only include rows where
+
+1. The `associated_variant_risk_allele` *for that row* is not empty, and
+2. The `associated_variant_risk_allele` letter *for that row* appears ***somewhere*** in the `genotype` sequence *for that row*.
+</blockquote>
+
+Let's summarize our approach:
+
+* To deal with the two step process where we check for empty `associated_variant_risk_allele` string, we created our own function (`my_search_fxn`), which includes an if-else statement describing the process.
+* To account for the fact that each search criteria, and what we're searching, changes for each row, we apply `my_search_fxn` row-by-row using a for loop.
+* To keep track of this process, we have a storage vector `our_logic_vector` where we will record the logical values for each row.
+<br><br>
+
+**Final Exercise.** In the second cell below we provide the loop we built in the last section.  We only need one small change to bring it all together.  Rather than looping over the first `4` rows, we want to loop over all the rows!  Use the `nrow()` function on `gene_df` to get the total number of rows.
+
+```{r nrow, exercise = TRUE, exercise.lines =3}
+# Write your nrow() code here.
+```
+```{r nrow-solution}
+nrow(gene_df)
+```
+
+Now that we know how many rows are in `gene_df`, modify the code below to loop through the entire data frame.
+
+```{r final-loop, exercise = TRUE, exercise.lines=14}
+# Make your small modification below
+our_logic_vector <- logical(4)
+
+for (i in 1:4){
+        temp_val<-my_search_fxn(gene_df[i,"associated_variant_risk_allele"],
+                      gene_df[i,"genotype"])
+        
+        our_logic_vector[i]<-temp_val
+}
+
+length(our_logic_vector)
+head(our_logic_vector, 10)
+```
+*Note*: The final two lines share some characteristics of `our_logic_vector` to make sure things are working:
+
+* The `length()` of the vector should be the same as the number of rows in `gene_df`. 
+* The `head()` function shows us the first 10 entries as a rough check to see if things are working. Only the first entry should be true.
+
+**A Final Check.** In this last code-chunk, let's use `our_logic_vector` to actually `filter()` the `gene_df` data frame. Then we can "eye-ball" whether our filtering process seemed to work!
+```{r final-filter-setup}
+our_logic_vector<-mapply(FUN=my_search_fxn, gene_df$associated_variant_risk_allele,
+       gene_df$genotype)
+```
+
+```{r final-filter, exercise=TRUE, exercise.lines=3, exercise.setup="final-filter-setup"}
+gene_df %>%
+    filter(...)
+```
+```{r final-filter-solution}
+gene_df %>%
+    filter(our_logic_vector)
+```
+**Check:** There should be only 16 rows in the final data frame.
+
+### Fantastic work!
+That was an involved example, and you did great. Hopefully you can use these tools in your upcoming work!
 
 ## Conclusions
 Notes, comments, summaries.
