@@ -119,8 +119,8 @@ Ready to move on?
 ## if-else statements
 An if-else statement is a great way to code multi-step processes. We think it's best to work linguistically by writing a sentence to describe the process. Try to make your sentence use the words **if** and **else** to describe the following process:
 
-    a. If the allele value is a letter, we proceed with checking it against the `genotype`.
-    b. If the allele value is empty, `""`, we want to drop the row.
+1. If the allele value is a letter, we proceed with checking it against the `genotype`.
+2. If the allele value is empty, `""`, we want to drop the row.
     
 This sentence will help reveal the structure of the code you will write.  Compare your sentence with ours.
 ```{r if-else-sentence}
@@ -372,7 +372,7 @@ for (i in 1:4){
 ### Storing the answers of a loop
 We are not really interested in a print out of the `my_search_fxn()` values. Instead, we would like to store these value in a logical vector so that we can use it inside a `filter()` command. 
 
-In `R`, to store the output of a loop, we first create a storage vector (`our_logic_vector`), and then inside the loop we assign the output of our instructions to the `i`th component of the storage vector. 
+In `R`, to store the output of a loop, we first create a storage vector (`our_logic_vector`), and then inside the loop we assign the output of our instructions to the `i`$^\text{th}$ component of the storage vector. 
 
 **Exercise.** Here's an example of storing the answer for the first four rows. On your own, write a description of what each line of the code is doing.
 ```{r echo = T}
@@ -392,7 +392,7 @@ our_logic_vector
 ```{r storing-loop}
   question("Did you write your explanation? Are you ready to see ours?",
     answer("Yes", correct = TRUE),
-    post_message = "`our_logic_vector <- logical(4)` <br>This creates a logical vector of length 4 (one spot for each row of our loop) <br><br> `for (i in 1:4){`  <br>Set the index variable `i` to take values 1, 2, 3, 4. <br><br> `temp_val <- my_search_fxn(gene_df[i,\"associated_variant_risk_allele\"],` <br>Stores the output of my_search_fxn() for the i-th row in a temporary variable called `temp_val` <br><br> `our_logic_vector[i]<-temp_val`<br> Takes that temporary value and assigns it to the i-th position of our storage vector<br><br> We then close the loop with `}` and use the last line to print to contents of `our_logic_vector` to make sure everything worked."
+    post_message = "`our_logic_vector <- logical(4)` <br>This creates a logical vector of length 4 (one spot for each row of our loop) that we will use for storage. <br><br> `for (i in 1:4){`  <br>Set the index variable `i` to take values 1, 2, 3, 4. <br><br> `temp_val <- my_search_fxn(gene_df[i,\"associated_variant_risk_allele\"],`<br> &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;`gene_df[i,\"genotype\"])` <br>Stores the output of my_search_fxn() for the i-th row in a temporary variable called `temp_val` <br><br> `our_logic_vector[i]<-temp_val`<br> Takes that temporary value and assigns it to the i-th position of our storage vector. (*Note*: it is not necessary to separate this step from the previous one using a temporary value, but it helps make the code a little more readable.)<br><br> We then close the loop with `}` and use the last line to print to contents of `our_logic_vector` to make sure everything worked."
   )
 ```
 
@@ -469,6 +469,57 @@ Notes, comments, summaries.
 
 Links to related exercises and resources.
 
+### All the code together
+```
+#create search function:
+my_search_fxn <- function(allele, genotype){
+    #Check if allele letter is empty
+    if (allele == ""){
+        # if it is, return FALSE to drop the row.
+        
+        FALSE
+        
+    } else {
+        # if the allele is not empty, 
+        # use grepl() to search for the allele somewhere
+        # in the two genotype letters.
+        
+        grepl(allele, genotype)
+        
+    }
+}
+
+# recall nrow(gene_df) is the number of rows in gene_df
+# Run the loop to create the logic vector
+
+# Storage logical vector
+our_logic_vector<-logical(nrow(gene_df))
+
+# Run the loop
+for (i in 1:nrow(gene_df)){
+    # get TRUE/FALSE value from my_search_fxn, row i
+    # store in a temporary value
+    temp_val<-my_search_fxn(gene_df[i,"associated_variant_risk_allele],
+    gene_df[i,"genotype"])
+    
+    # record the temporary value in the storage vector
+    our_logic_vector[i]<-temp_val
+}
+
+# Run some checks on the logic vector. 
+# Is the vector the right length?
+# Do the first few entries seem right?
+length(our_logic_vector)
+head(our_logic_vector,10)
+
+
+# Finally, filter and create the data frame,
+# save the results as final_df
+gene_df %>%
+    filter(our_logic_vector) -> final_df
+
+
+```
 
 #### References
 <div id="refs"></div>
