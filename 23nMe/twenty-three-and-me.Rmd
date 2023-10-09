@@ -116,6 +116,7 @@ Using `grepl()` will help us with our searches, but how do we deal with the the 
 
 Ready to move on?
 
+
 ## if-else statements
 An if-else statement is a great way to code multi-step processes. We think it's best to work linguistically by writing a sentence to describe the process. Try to make your sentence use the words **if** and **else** to describe the following process:
 
@@ -124,10 +125,17 @@ An if-else statement is a great way to code multi-step processes. We think it's 
     
 This sentence will help reveal the structure of the code you will write.  Compare your sentence with ours.
 ```{r if-else-sentence}
-  question("Did you write your sentence? Are you ready to see ours?",
-    answer("Yes", correct = TRUE),
-    post_message = "**If** the `associated_variant_risk_allele` is empty or missing, **then** skip the row by returning FALSE. **Else**, perform the search on `genotype`."
-  )
+
+question_text(
+  "Share your sentence below. <br></br> (***Note***: all responses are marked 'correct,' so please compare your answer against ours.",
+  answer_fn(function(value) {
+    if (grepl(".*", value)) {
+      correct("Great work writing your sentence! How does it compare with ours?")
+    }
+  }), message="**If** the `associated_variant_risk_allele` is empty or missing, **then** skip the row by returning FALSE. **Else**, perform the search on `genotype`."
+)
+
+
 ```
 
 Here's how we translate our linguistic sentence into code:

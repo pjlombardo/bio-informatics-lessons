@@ -239,11 +239,16 @@ The `%in%` operator in `R` will check if text is in a provided list.  For exampl
 ```{r echo = T}
 small_iris$Species %in% c("virginica","versicolor")
 ```
-Why are the first three entries `FALSE`? *In your own words*, explain what the code does!
+
+
 ```{r in-operator-question}
-question("Ready to see an explanation?",
-answer("Yes.", correct = TRUE),
-post_message = "The vector `small_iris$Species` contains text recording the species of each flower.  The `%in%` operator checks whether a given value from this vector is  ***in***  the list provided: `c(\"virginica\",\"versicolor\")`.  <br></br> Since the list provided contains only `virginica` and `versicolor` as options, the first three entries are False because they correspond to `setosa` flowers.  The last six entries are True because these are either `virginica` or `versicolor`."
+question_text(
+  "Why are the first three entries `FALSE`? *In your own words*, explain what the code does! <br></br> Submit your explanation below to see an example written by us! <br></br> (***Note***: all responses are marked 'correct,' so please compare your answer against ours.",
+  answer_fn(function(value) {
+    if (grepl(".*", value)) {
+      correct("Thanks for your work writing your explanation! How does it compare with ours?")
+    }
+  }), message="The vector `small_iris$Species` contains text recording the species of each flower.  The `%in%` operator checks whether a given value from this vector is  ***in***  the list provided: `c(\"virginica\",\"versicolor\")`.  <br></br> Since the list provided contains only `virginica` and `versicolor` as options, the first three entries are False because they correspond to `setosa` flowers.  The last six entries are True because these are either `virginica` or `versicolor`."
 )
 ```
 
@@ -338,11 +343,17 @@ grepl("osa", small_iris$Species)
 grepl("t", small_iris$Species)
 ```
 
+Consider this question:
 ```{r grepl-question1}
-question("Can you explain why `grepl(\"e\", small_iris$Species)` would not identify `setosa` only?",
-answer("Select and continue to see our explanation.", correct = TRUE),
-post_message = "The command `grepl(\"e\", small_iris$Species)` would look for an \"e\" *anywhere* in the searched text.  Since v**e**rsicolor contains an \"e\" also, this would identify those flowers as well.  It would come back False on `virginica` however, which does not have an \"e\". "
+question_text(
+  "Can you explain why `grepl(\"e\", small_iris$Species)` would not identify `setosa` ***only***? <br></br> Submit your conclusion to see an example written by us! <br></br> (***Note***: all responses are marked 'correct,' so please compare your answer against ours.",
+  answer_fn(function(value) {
+    if (grepl(".*", value)) {
+      correct("Thanks for writing your answer! How does yours compare with ours?")
+    }
+  }), message="The command `grepl(\"e\", small_iris$Species)` would look for an \"e\" *anywhere* in the searched text.  Since v**e**rsicolor contains an \"e\" also, this would identify those flowers as well.  It would come back False on `virginica` however, which does not have an \"e\". "
 )
+
 ```
 
 ### `grepl()` with the `tweets` data set
